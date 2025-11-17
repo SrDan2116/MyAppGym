@@ -1,5 +1,5 @@
 // CAMBIA v12 por v13
-const CACHE_NAME = 'notas-cache-v14'; 
+const CACHE_NAME = 'notas-cache-v16'; 
 
 // ¡ACTUALIZA ESTA LISTA!
 const urlsToCache = [

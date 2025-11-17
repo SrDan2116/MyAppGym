@@ -4,6 +4,7 @@ const seccionCalendario = document.getElementById('seccion-calendario');
 const seccionGestorRutinas = document.getElementById('seccion-gestor-rutinas');
 const seccionPeso = document.getElementById('seccion-peso');
 const seccionRegistroDiario = document.getElementById('seccion-registro-diario');
+const seccionConfiguracion = document.getElementById('seccion-configuracion'); // ¡NUEVO!
 
 export function mostrarSeccion(idSeccion) {
     seccionHome.classList.add('oculto');
@@ -11,6 +12,7 @@ export function mostrarSeccion(idSeccion) {
     seccionGestorRutinas.classList.add('oculto');
     seccionRegistroDiario.classList.add('oculto');
     seccionPeso.classList.add('oculto');
+    seccionConfiguracion.classList.add('oculto'); // ¡NUEVO!
     
     const seccion = document.getElementById(idSeccion);
     if (seccion) seccion.classList.remove('oculto');

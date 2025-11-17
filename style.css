@@ -60,6 +60,7 @@ nav {
     justify-content: center;
     gap: 10px;
     margin-top: 10px;
+    flex-wrap: wrap;
 }
 
 /* --- Estilos de Botones Globales --- */
