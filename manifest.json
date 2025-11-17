@@ -1,6 +1,6 @@
 {
-    "name": "Mi App de Notas",
-    "short_name": "Notas",
+    "name": "Gym Control",
+    "short_name": "Gym",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
