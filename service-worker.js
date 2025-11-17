@@ -1,5 +1,5 @@
 // CAMBIA v12 por v13
-const CACHE_NAME = 'notas-cache-v17'; 
+const CACHE_NAME = 'notas-cache-v18'; 
 
 // ¡ACTUALIZA ESTA LISTA!
 const urlsToCache = [
@@ -17,7 +17,10 @@ const urlsToCache = [
     
     // ¡NUEVO! Añadimos los CDNs al caché
     'https://cdn.jsdelivr.net/npm/chart.js',
-    'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'
+    'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
+
+    'images/icon-192.png',
+    'images/icon-512.png'
     // Nota: Las 'fuentes' que pide bootstrap-icons.min.css se cachearán dinámicamente
 ];
 
