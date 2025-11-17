@@ -1,7 +1,7 @@
 {
     "name": "Mi App de Notas",
     "short_name": "Notas",
-    "start_url": "index.html",
+    "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#007BFF",

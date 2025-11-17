@@ -1,82 +1,51 @@
-// Esperar a que el DOM esté listo
+
 document.addEventListener('DOMContentLoaded', () => {
 
-    let db; // Variable para guardar la conexión a la BD
+    let db; // Variable para la base de datos
 
     // 1. Abrir (o crear) la base de datos
-    const request = indexedDB.open('NotasDB', 1);
+    // Subimos la versión a 2 para que se actualice la estructura
+    const request = indexedDB.open('GymAppDB', 2);
 
     // 2. Manejar errores
     request.onerror = (event) => {
         console.error('Error al abrir IndexedDB:', event);
     };
 
-    // 3. Este evento solo corre si la BD es nueva o la versión cambia
+    // 3. Este evento se ejecuta si la versión cambia (o es la primera vez)
     request.onupgradeneeded = (event) => {
         db = event.target.result;
-        // Crear la "tabla" (se llama 'object store')
-        const store = db.createObjectStore('notas', { keyPath: 'id', autoIncrement: true });
-        console.log('Base de datos y almacén de notas creados!');
+        console.log('Actualizando la base de datos (onupgradeneeded)');
+
+        // Borrar la "tabla" de notas si existía (limpieza)
+        if (db.objectStoreNames.contains('notas')) {
+            db.deleteObjectStore('notas');
+            console.log('Almacén "notas" eliminado.');
+        }
+
+        // Crear el almacén para las PLANTILLAS de rutinas
+        if (!db.objectStoreNames.contains('rutinas')) {
+            db.createObjectStore('rutinas', { keyPath: 'id', autoIncrement: true });
+            console.log('Almacén "rutinas" creado.');
+        }
+
+        // Crear el almacén para los REGISTROS diarios
+        if (!db.objectStoreNames.contains('registros')) {
+            // Usaremos la fecha (ej. '2025-11-17') como la clave
+            db.createObjectStore('registros', { keyPath: 'fecha' });
+            console.log('Almacén "registros" creado.');
+        }
     };
 
     // 4. Cuando la BD se abre correctamente
     request.onsuccess = (event) => {
         db = event.target.result;
-        console.log('Base de datos abierta exitosamente.');
-        // Cargar las notas existentes al abrir la app
-        cargarNotas();
+        console.log('Base de datos GymAppDB abierta exitosamente.');
+        // Aquí llamaremos a funciones para mostrar la UI, ej:
+        // cargarRutinasExistentes();
     };
 
-    // 5. Configurar el botón de guardar
-    const btnGuardar = document.getElementById('btn-guardar');
-    const txtNota = document.getElementById('txt-nota');
+    // --- A PARTIR DE AQUÍ IRÁ NUESTRA LÓGICA ---
+    // (Por ahora lo dejamos listo)
 
-    btnGuardar.addEventListener('click', () => {
-        const texto = txtNota.value;
-        if (texto.trim() === '') return; // No guardar notas vacías
-
-        // Crear una "transacción" (de tipo lectura-escritura)
-        const transaction = db.transaction(['notas'], 'readwrite');
-        const store = transaction.objectStore('notas');
-
-        // Añadir la nota
-        const addRequest = store.add({ texto: texto, fecha: new Date() });
-
-        addRequest.onsuccess = () => {
-            console.log('Nota guardada!');
-            txtNota.value = ''; // Limpiar el textarea
-            cargarNotas(); // Recargar la lista de notas
-        };
-
-        addRequest.onerror = (event) => {
-            console.error('Error al guardar la nota:', event);
-        };
-    });
-
-    // 6. Función para cargar y mostrar todas las notas
-    function cargarNotas() {
-        const contenedor = document.getElementById('contenedor-notas');
-        contenedor.innerHTML = ''; // Limpiar el contenedor
-
-        const transaction = db.transaction(['notas'], 'readonly');
-        const store = transaction.objectStore('notas');
-
-        // Usar un "cursor" para leer todos los registros
-        const cursorRequest = store.openCursor(null, 'prev'); // 'prev' para mostrar la más nueva primero
-
-        cursorRequest.onsuccess = (event) => {
-            const cursor = event.target.result;
-            if (cursor) {
-                const nota = cursor.value;
-
-                // Crear el elemento HTML para la nota
-                const divNota = document.createElement('div');
-                divNota.textContent = `${nota.fecha.toLocaleString()}: ${nota.texto}`;
-                contenedor.appendChild(divNota);
-
-                // Mover al siguiente registro
-                cursor.continue();
-            }
-        };
-    }
 });

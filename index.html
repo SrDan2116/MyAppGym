@@ -3,27 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>App de Notas</title>
+    <title>Mi App de Gimnasio</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
-    <h1>Mi App de Notas (Offline)</h1>
-    <textarea id="txt-nota" placeholder="Escribe tu nota aquí..."></textarea>
-    <button id="btn-guardar">Guardar Nota</button>
+    <header>
+        <h1>Mi Control de Gimnasio</h1>
+        </header>
 
-    <h2>Mis Notas Guardadas</h2>
-    <div id="contenedor-notas">
-        </div>
+    <main>
+        <section id="seccion-gestor-rutinas">
+            <h2>Mis Rutinas</h2>
+            
+            <div id="lista-rutinas">
+                </div>
+
+            <hr>
+
+            <h3>Crear Nueva Rutina</h3>
+            <input type="text" id="txt-nombre-rutina" placeholder="Nombre de la rutina (Ej: Push)">
+            
+            <h4>Ejercicios de la rutina:</h4>
+            <div id="lista-ejercicios-para-rutina">
+                </div>
+
+            <div class="form-agregar-ejercicio">
+                <input type="text" id="txt-nombre-ejercicio" placeholder="Nombre del ejercicio">
+                <input type="number" id="num-series" placeholder="# de Series">
+                <button id="btn-agregar-ejercicio">Agregar Ejercicio</button>
+            </div>
+            
+            <br>
+            <button id="btn-guardar-rutina-completa">Guardar Rutina Completa</button>
+
+        </section>
+
+        </main>
+
 
     <script src="app.js"></script>
-
+    
     <script>
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('service-worker.js')
-                .then(registration => console.log('Service Worker registrado!', registration))
-                .catch(error => console.log('Error al registrar Service Worker:', error));
+            navigator.serviceWorker.register('service-worker.js');
         }
     </script>
 </body>
