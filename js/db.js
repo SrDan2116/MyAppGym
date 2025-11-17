@@ -1,7 +1,7 @@
 export function initDB() {
     return new Promise((resolve, reject) => {
-        // ¡Subimos la versión a 3 por el módulo de peso!
-        const request = indexedDB.open('GymAppDB', 3);
+        // ¡Subimos la versión a 4!
+        const request = indexedDB.open('GymAppDB', 4);
 
         request.onerror = (event) => {
             console.error('Error al abrir IndexedDB:', event);
@@ -11,6 +11,8 @@ export function initDB() {
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
             console.log('Actualizando la base de datos (onupgradeneeded)');
+            
+            // Re-verificar todas las tablas por si acaso
             if (!db.objectStoreNames.contains('rutinas')) {
                 db.createObjectStore('rutinas', { keyPath: 'id', autoIncrement: true });
             }
@@ -24,8 +26,8 @@ export function initDB() {
 
         request.onsuccess = (event) => {
             const db = event.target.result;
-            console.log('Base de datos GymAppDB abierta.');
-            resolve(db); // Devuelve la BD cuando esté lista
+            console.log('Base de datos GymAppDB (v4) abierta.');
+            resolve(db);
         };
     });
 }

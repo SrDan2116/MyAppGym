@@ -1,4 +1,5 @@
 let db;
+let graficoPesoChart = null; // Variable para guardar la instancia del gráfico
 
 // Selectores del DOM
 const inputPeso = document.getElementById('input-peso');
@@ -10,6 +11,7 @@ const detalleMedida = document.getElementById('detalle-medida');
 const detalleMedidaTitulo = document.getElementById('detalle-medida-titulo');
 const detalleMedidaContenido = document.getElementById('detalle-medida-contenido');
 const btnCerrarDetalleMedida = document.getElementById('btn-cerrar-detalle-medida');
+const canvasGrafico = document.getElementById('grafico-peso');
 
 export function initPeso(database) {
     db = database;
@@ -28,6 +30,7 @@ export function initPeso(database) {
 
     // Carga inicial
     cargarListaMedidas();
+    renderizarGraficoPeso(); // ¡NUEVO!
 }
 
 // --- Funciones "privadas" ---
@@ -60,9 +63,11 @@ function guardarMedidas() {
         inputAltura.value = '';
         inputCintura.value = '';
         cargarListaMedidas();
+        renderizarGraficoPeso(); // ¡NUEVO! Actualizar gráfico
     };
     putRequest.onerror = (event) => console.error('Error al guardar medidas:', event);
 }
+
 function cargarListaMedidas() {
     listaMedidas.innerHTML = '';
     const transaction = db.transaction(['medidas'], 'readonly');
@@ -80,6 +85,7 @@ function cargarListaMedidas() {
         }
     };
 }
+
 function mostrarDetalleMedida(fecha) {
     const transaction = db.transaction(['medidas'], 'readonly');
     const store = transaction.objectStore('medidas');
@@ -96,5 +102,62 @@ function mostrarDetalleMedida(fecha) {
             `;
             detalleMedida.classList.remove('oculto');
         }
+    };
+}
+
+// --- ¡NUEVA FUNCIÓN PARA EL GRÁFICO! ---
+function renderizarGraficoPeso() {
+    const transaction = db.transaction(['medidas'], 'readonly');
+    const store = transaction.objectStore('medidas');
+    const getAllRequest = store.getAll(); // Obtener todos los registros
+
+    getAllRequest.onsuccess = () => {
+        const registros = getAllRequest.result;
+        
+        // Filtramos solo los que tienen un valor de peso
+        const datosConPeso = registros.filter(r => r.peso !== null && r.peso > 0);
+        
+        // Extraemos las etiquetas (fechas) y los datos (pesos)
+        const labels = datosConPeso.map(r => r.fecha);
+        const data = datosConPeso.map(r => r.peso);
+
+        const ctx = canvasGrafico.getContext('2d');
+        
+        // Si el gráfico ya existe, lo destruimos para volver a dibujarlo
+        if (graficoPesoChart) {
+            graficoPesoChart.destroy();
+        }
+        
+        // Creamos el nuevo gráfico
+        graficoPesoChart = new Chart(ctx, {
+            type: 'line', // Gráfico de líneas
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Peso Corporal (kg)',
+                    data: data,
+                    fill: false,
+                    borderColor: '#03DAC6', // Color de la línea
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        ticks: { color: '#B0B0B0' } // Color texto Eje X
+                    },
+                    y: {
+                        ticks: { color: '#B0B0B0' }, // Color texto Eje Y
+                        beginAtZero: false // No empezar en cero
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: { color: '#E0E0E0' } // Color de la leyenda
+                    }
+                }
+            }
+        });
     };
 }

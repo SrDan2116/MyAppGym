@@ -372,3 +372,40 @@ legend {
 #readonly-contenido li {
     color: var(--color-texto-secundario);
 }
+
+/* --- Mejora #4: Iconos de Navegación --- */
+nav button i {
+    margin-right: 8px;
+    font-size: 1.1em;
+    /* Para alinear el icono y el texto */
+    vertical-align: middle;
+}
+
+/* --- Mejora #2: Inputs de Peso/Reps --- */
+.serie-registro {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.serie-registro label {
+    flex-basis: 60px; /* Ancho fijo para "Serie 1:" */
+    margin-bottom: 0;
+    color: var(--color-texto-secundario);
+}
+.rep-input, .peso-input {
+    width: 80px; /* Ancho más pequeño */
+    padding: 10px;
+    text-align: center;
+    font-size: 1em;
+}
+
+/* --- Mejora #3: Contenedor del Gráfico --- */
+.chart-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 10px auto 30px auto;
+    padding: 15px;
+    background: var(--color-bg-secundario);
+    border-radius: 8px;
+}

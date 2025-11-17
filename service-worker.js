@@ -1,18 +1,23 @@
-// 1. CAMBIA EL NOMBRE DEL CACHÉ
-const CACHE_NAME = 'notas-cache-v12';
+// CAMBIA v12 por v13
+const CACHE_NAME = 'notas-cache-v13'; 
 
-// 2. AÑADE TODOS LOS ARCHIVOS A LA LISTA
+// ¡ACTUALIZA ESTA LISTA!
 const urlsToCache = [
     './',
     'index.html',
     'style.css',
     'manifest.json',
-    'js/main.js',             // <-- AÑADIR
-    'js/db.js',               // <-- AÑADIR
-    'js/utils.js',            // <-- AÑADIR
-    'js/ui_rutinas.js',       // <-- AÑADIR
-    'js/ui_calendario.js',    // <-- AÑADIR
-    'js/ui_peso.js'           // <-- AÑADIR
+    'js/main.js',
+    'js/db.js',
+    'js/utils.js',
+    'js/ui_rutinas.js',
+    'js/ui_calendario.js',
+    'js/ui_peso.js',
+    
+    // ¡NUEVO! Añadimos los CDNs al caché
+    'https://cdn.jsdelivr.net/npm/chart.js',
+    'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css'
+    // Nota: Las 'fuentes' que pide bootstrap-icons.min.css se cachearán dinámicamente
 ];
 
 // Evento 'install': Se dispara cuando el SW se instala
@@ -20,22 +25,43 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Cache v2 abierto y archivos guardados');
+                console.log('Cache v13 abierto y archivos base guardados');
+                // Guardar todos nuestros archivos en el caché
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
 // Evento 'fetch': Se dispara cada vez que la app pide un archivo
+// ¡Esta función está MODIFICADA para manejar CDNs!
 self.addEventListener('fetch', event => {
+    const requestUrl = new URL(event.request.url);
+
+    // Si la petición es para las fuentes de Bootstrap (vienen de otro dominio)
+    // O para el propio Chart.js
+    if (requestUrl.origin === 'https://cdn.jsdelivr.net') {
+        event.respondWith(
+            caches.match(event.request).then(response => {
+                // Si está en caché, lo devolvemos
+                return response || fetch(event.request).then(fetchResponse => {
+                    // Si no está, lo buscamos en la red Y LO GUARDAMOS
+                    return caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, fetchResponse.clone());
+                        return fetchResponse;
+                    });
+                });
+            })
+        );
+        return; // Salir de la función aquí
+    }
+
+    // Lógica de caché normal (primero caché, si no, red) para el resto
     event.respondWith(
         caches.match(event.request)
             .then(response => {
-                // Si está en caché, lo devolvemos
                 if (response) {
                     return response;
                 }
-                // Si no está, vamos a la red a buscarlo
                 return fetch(event.request);
             })
     );
@@ -47,7 +73,7 @@ self.addEventListener('activate', event => {
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
-                    // Si el nombre del caché no es el nuevo (v2), bórralo
+                    // Si el nombre del caché no es el nuevo (v13), bórralo
                     if (cacheName !== CACHE_NAME) {
                         return caches.delete(cacheName);
                     }

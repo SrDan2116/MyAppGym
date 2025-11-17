@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi App de Gimnasio</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
@@ -11,10 +14,11 @@
     <header>
         <h1>Mi Control de Gimnasio</h1>
         <nav>
-            <button id="btn-nav-home">Inicio</button>
-            <button id="btn-nav-calendario">Calendario</button>
-            <button id="btn-nav-rutinas">Rutinas</button>
-            <button id="btn-nav-peso">Peso</button> </nav>
+            <button id="btn-nav-home"><i class="bi bi-house-door-fill"></i> Inicio</button>
+            <button id="btn-nav-calendario"><i class="bi bi-calendar-event-fill"></i> Calendario</button>
+            <button id="btn-nav-rutinas"><i class="bi bi-journal-text"></i> Rutinas</button>
+            <button id="btn-nav-peso"><i class="bi bi-bar-chart-line-fill"></i> Peso</button>
+        </nav>
     </header>
     <main>
         <section id="seccion-home">
@@ -33,8 +37,7 @@
 
             <div id="vista-readonly-registro" class="oculto">
                 <h3>Registro Guardado (Solo Lectura)</h3>
-                <div id="readonly-contenido">
-                    </div>
+                <div id="readonly-contenido"></div>
             </div>
 
             <div id="formulario-editable-registro">
@@ -52,56 +55,38 @@
                     <label for="select-dia-de-rutina">2. Selecciona el Día:</label>
                     <select id="select-dia-de-rutina"></select>
                 </div>
+                
                 <div id="ejercicios-del-dia"></div>
+                
                 <button id="btn-guardar-registro">Guardar Registro del Día</button>
             </div>
         </section>
 
         <section id="seccion-gestor-rutinas" class="oculto">
             <h2>Mis Rutinas</h2>
-            <div id="lista-rutinas"></div>
-            <hr>
+            <div id="lista-rutinas"></div><hr>
             <h3>Crear/Modificar Nueva Rutina</h3>
-            <input type="text" id="txt-nombre-rutina" placeholder="Nombre (Ej: PPL 6 Días)">
-            <div id="dias-en-creacion-container">
-                <h4>Días de esta rutina:</h4>
-                <div id="dias-temporales-ui"></div>
-            </div>
-            <fieldset class="form-agregar-dia">
-                <legend>Añadir Día a la Rutina</legend>
-                <input type="text" id="txt-nombre-dia" placeholder="Nombre del Día (Ej: Día 1 - Push)">
-                <div id="ejercicios-temporales-para-dia-ui"></div>
-                <div class="form-agregar-ejercicio">
-                    <input type="text" id="txt-nombre-ejercicio" placeholder="Nombre del ejercicio">
-                    <input type="number" id="num-series" placeholder="# Series">
-                    <button type="button" id="btn-agregar-ejercicio-a-dia">Añadir Ejercicio</button>
-                </div>
-                <button type="button" id="btn-guardar-dia-en-rutina">Guardar este Día</button>
-            </fieldset>
-            <button id="btn-guardar-rutina-completa">Guardar Rutina Completa</button>
-            <button type="button" id="btn-cancelar-rutina">Cancelar/Limpiar</button>
+            <input type="text" id="txt-nombre-rutina" placeholder="Nombre (Ej: PPL 6 Días)"><div id="dias-en-creacion-container"><h4>Días de esta rutina:</h4><div id="dias-temporales-ui"></div></div><fieldset class="form-agregar-dia"><legend>Añadir Día a la Rutina</legend><input type="text" id="txt-nombre-dia" placeholder="Nombre del Día (Ej: Día 1 - Push)"><div id="ejercicios-temporales-para-dia-ui"></div><div class="form-agregar-ejercicio"><input type="text" id="txt-nombre-ejercicio" placeholder="Nombre del ejercicio"><input type="number" id="num-series" placeholder="# Series"><button type="button" id="btn-agregar-ejercicio-a-dia">Añadir Ejercicio</button></div><button type="button" id="btn-guardar-dia-en-rutina">Guardar este Día</button></fieldset><button id="btn-guardar-rutina-completa">Guardar Rutina Completa</button><button type="button" id="btn-cancelar-rutina">Cancelar/Limpiar</button>
         </section>
         
         <section id="seccion-peso" class="oculto">
             <h2>Control de Peso y Medidas</h2>
-            <p>Registra tus medidas para el día de hoy. Los registros no se pueden modificar.</p>
             
+            <div class="chart-container">
+                <canvas id="grafico-peso"></canvas>
+            </div>
+            
+            <p>Registra tus medidas para el día de hoy.</p>
             <label for="input-peso">Peso (kg):</label>
             <input type="number" id="input-peso" placeholder="Ej: 70.5">
-            
             <label for="input-altura">Altura (cm):</label>
             <input type="number" id="input-altura" placeholder="Ej: 175">
-            
             <label for="input-cintura">Cintura (cm):</label>
             <input type="number" id="input-cintura" placeholder="Ej: 80">
-            
             <button id="btn-guardar-medidas">Guardar Medidas de Hoy</button>
-            
             <hr>
             <h3>Registros Guardados</h3>
-            <div id="lista-medidas">
-                </div>
-            
+            <div id="lista-medidas"></div>
             <div id="detalle-medida" class="oculto">
                 <h4 id="detalle-medida-titulo"></h4>
                 <div id="detalle-medida-contenido"></div>
@@ -110,6 +95,9 @@
         </section>
 
     </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script src="js/main.js" type="module"></script>
     <script>
         if ('serviceWorker' in navigator) {
