@@ -2,21 +2,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let db;
     let fechaSeleccionadaGlobal = null;
-    
-    // Variables Globales para el creador de rutinas
     let rutinaTemporal = { nombre: '', dias: [] };
     let ejerciciosTemporalesParaDia = [];
+    let idRutinaEditando = null;
     
-    // NUEVO: Guardará el ID de la rutina que estamos editando
-    let idRutinaEditando = null; 
+    // NUEVO: Variable para guardar la rutina seleccionada en el registro
+    let rutinaCompletaSeleccionada = null; 
 
-    // --- Selectores del DOM (Sin cambios) ---
-    // (Omitidos por brevedad, son los mismos que antes)
+    // --- Selectores del DOM ---
+    
+    // Navegación
     const btnNavCalendario = document.getElementById('btn-nav-calendario');
     const btnNavRutinas = document.getElementById('btn-nav-rutinas');
     const seccionCalendario = document.getElementById('seccion-calendario');
     const seccionGestorRutinas = document.getElementById('seccion-gestor-rutinas');
     const seccionRegistroDiario = document.getElementById('seccion-registro-diario');
+    
+    // Gestor de Rutinas (Módulo 1)
     const listaRutinas = document.getElementById('lista-rutinas');
     const txtNombreRutina = document.getElementById('txt-nombre-rutina');
     const diasTemporalesUI = document.getElementById('dias-temporales-ui');
@@ -28,10 +30,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardarDiaEnRutina = document.getElementById('btn-guardar-dia-en-rutina');
     const btnGuardarRutinaCompleta = document.getElementById('btn-guardar-rutina-completa');
     const btnCancelarRutina = document.getElementById('btn-cancelar-rutina');
+    
+    // Calendario (Módulo 2)
     const calendarioGrid = document.getElementById('calendario-grid');
+
+    // Registro Diario (Módulo 3)
     const tituloRegistroDia = document.getElementById('titulo-registro-dia');
     const btnVolverCalendario = document.getElementById('btn-volver-calendario');
     const selectRutinaDelDia = document.getElementById('select-rutina-del-dia');
+    // ¡NUEVOS SELECTORES!
+    const contenedorSelectDia = document.getElementById('contenedor-select-dia');
+    const selectDiaDeRutina = document.getElementById('select-dia-de-rutina');
     const ejerciciosDelDia = document.getElementById('ejercicios-del-dia');
     const txtComentarioDia = document.getElementById('txt-comentario-dia');
     const btnGuardarRegistro = document.getElementById('btn-guardar-registro');
@@ -67,220 +76,127 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     btnNavCalendario.addEventListener('click', () => mostrarSeccion('seccion-calendario'));
     btnNavRutinas.addEventListener('click', () => mostrarSeccion('seccion-gestor-rutinas'));
-    btnVolverCalendario.addEventListener('click', () => mostrarSeccion('seccion-calendario'));
+    btnVolverCalendario.addEventListener('click', () => {
+        renderizarCalendario(); // Recargar calendario por si algo cambió
+        mostrarSeccion('seccion-calendario');
+    });
 
 
-    // --- MÓDULO 1: GESTOR DE RUTINAS (CAMBIOS IMPORTANTES) ---
-
-    // (Funciones 1 y 2 sin cambios: btnAgregarEjercicioADia, btnGuardarDiaEnRutina)
+    // --- MÓDULO 1: GESTOR DE RUTINAS (Sin cambios) ---
+    // (Omitido por brevedad - es el mismo código de la respuesta anterior)
     btnAgregarEjercicioADia.addEventListener('click', () => {
-        const nombreEjercicio = txtNombreEjercicio.value;
-        const series = parseInt(numSeries.value);
-        if (nombreEjercicio.trim() === '' || isNaN(series) || series <= 0) {
-            alert('Ingresa nombre y series válidos.'); return;
-        }
+        const nombreEjercicio = txtNombreEjercicio.value; const series = parseInt(numSeries.value);
+        if (nombreEjercicio.trim() === '' || isNaN(series) || series <= 0) { alert('Ingresa nombre y series válidos.'); return; }
         ejerciciosTemporalesParaDia.push({ nombre: nombreEjercicio, series: series });
         renderizarEjerciciosTemporalesParaDia();
         txtNombreEjercicio.value = ''; numSeries.value = ''; txtNombreEjercicio.focus();
     });
-
     btnGuardarDiaEnRutina.addEventListener('click', () => {
         const nombreDia = txtNombreDia.value;
-        if (nombreDia.trim() === '' || ejerciciosTemporalesParaDia.length === 0) {
-            alert('Ingresa un nombre para el día y añade al menos un ejercicio.'); return;
-        }
+        if (nombreDia.trim() === '' || ejerciciosTemporalesParaDia.length === 0) { alert('Ingresa un nombre para el día y añade al menos un ejercicio.'); return; }
         rutinaTemporal.dias.push({ nombreDia: nombreDia, ejercicios: ejerciciosTemporalesParaDia });
-        txtNombreRutina.disabled = true;
-        rutinaTemporal.nombre = txtNombreRutina.value || 'Rutina Sin Nombre';
+        txtNombreRutina.disabled = true; rutinaTemporal.nombre = txtNombreRutina.value || 'Rutina Sin Nombre';
         renderizarDiasTemporalesUI();
-        txtNombreDia.value = '';
-        ejerciciosTemporalesParaDia = [];
-        renderizarEjerciciosTemporalesParaDia();
+        txtNombreDia.value = ''; ejerciciosTemporalesParaDia = []; renderizarEjerciciosTemporalesParaDia();
     });
-
-    // 3. Botón "Guardar Rutina Completa" (¡MODIFICADO!)
     btnGuardarRutinaCompleta.addEventListener('click', () => {
         rutinaTemporal.nombre = txtNombreRutina.value;
-        if (rutinaTemporal.nombre.trim() === '' || rutinaTemporal.dias.length === 0) {
-            alert('Ingresa un nombre de rutina y guarda al menos un día.');
-            return;
-        }
-
-        const transaction = db.transaction(['rutinas'], 'readwrite');
-        const store = transaction.objectStore('rutinas');
+        if (rutinaTemporal.nombre.trim() === '' || rutinaTemporal.dias.length === 0) { alert('Ingresa un nombre de rutina y guarda al menos un día.'); return; }
+        const transaction = db.transaction(['rutinas'], 'readwrite'); const store = transaction.objectStore('rutinas');
         let request;
-
-        // ¡AQUÍ ESTÁ LA LÓGICA DE EDICIÓN!
         if (idRutinaEditando !== null) {
-            // Estamos EDITANDO (usamos 'put')
-            rutinaTemporal.id = idRutinaEditando; // Aseguramos que el ID esté en el objeto
-            request = store.put(rutinaTemporal);
+            rutinaTemporal.id = idRutinaEditando; request = store.put(rutinaTemporal);
         } else {
-            // Estamos CREANDO (usamos 'add')
             request = store.add(rutinaTemporal);
         }
-
         request.onsuccess = () => {
-            alert('¡Rutina guardada!');
-            limpiarFormularioRutina(); // Esto resetea idRutinaEditando a null
-            cargarRutinasGuardadas(); // Recargar la lista
+            alert('¡Rutina guardada!'); limpiarFormularioRutina(); cargarRutinasGuardadas();
         };
         request.onerror = (event) => console.error('Error al guardar rutina:', event);
     });
-
-    // 4. Botón "Cancelar"
     btnCancelarRutina.addEventListener('click', limpiarFormularioRutina);
-
-    // 5. Función "Limpiar" (¡MODIFICADA!)
     function limpiarFormularioRutina() {
-        rutinaTemporal = { nombre: '', dias: [] };
-        ejerciciosTemporalesParaDia = [];
-        
-        // ¡MUY IMPORTANTE!
-        idRutinaEditando = null; // Reseteamos el modo "edición"
-        
-        txtNombreRutina.value = '';
-        txtNombreRutina.disabled = false;
-        txtNombreDia.value = '';
-        renderizarDiasTemporalesUI();
-        renderizarEjerciciosTemporalesParaDia();
+        rutinaTemporal = { nombre: '', dias: [] }; ejerciciosTemporalesParaDia = [];
+        idRutinaEditando = null;
+        txtNombreRutina.value = ''; txtNombreRutina.disabled = false; txtNombreDia.value = '';
+        renderizarDiasTemporalesUI(); renderizarEjerciciosTemporalesParaDia();
     }
-
-    // 6. Funciones "renderizar" (Sin cambios)
     function renderizarEjerciciosTemporalesParaDia() {
         ejerciciosTemporalesParaDiaUI.innerHTML = '';
         ejerciciosTemporalesParaDia.forEach((ej, index) => {
-            const div = document.createElement('div');
-            div.className = 'ejercicio-temporal-item';
-            div.innerHTML = `<span>${ej.nombre} (${ej.series} series)</span>
-                             <button type="button" class="btn-borrar-item" data-index="${index}">&times;</button>`;
+            const div = document.createElement('div'); div.className = 'ejercicio-temporal-item';
+            div.innerHTML = `<span>${ej.nombre} (${ej.series} series)</span> <button type="button" class="btn-borrar-item" data-index="${index}">&times;</button>`;
             ejerciciosTemporalesParaDiaUI.appendChild(div);
         });
     }
-
     function renderizarDiasTemporalesUI() {
         diasTemporalesUI.innerHTML = '';
         rutinaTemporal.dias.forEach((dia, index) => {
-            const div = document.createElement('div');
-            div.className = 'dia-temporal-item';
-            div.innerHTML = `<span><strong>${dia.nombreDia}</strong> (${dia.ejercicios.length} ejercicios)</span>
-                             <button type="button" class="btn-borrar-item" data-index="${index}">&times;</button>`;
+            const div = document.createElement('div'); div.className = 'dia-temporal-item';
+            div.innerHTML = `<span><strong>${dia.nombreDia}</strong> (${dia.ejercicios.length} ejercicios)</span> <button type="button" class="btn-borrar-item" data-index="${index}">&times;</button>`;
             diasTemporalesUI.appendChild(div);
         });
     }
-
-    // 7. Lógica para botones de borrar (X) (Sin cambios)
     seccionGestorRutinas.addEventListener('click', (event) => {
         if (event.target.matches('.btn-borrar-item')) {
             const index = parseInt(event.target.dataset.index);
             if (event.target.closest('#ejercicios-temporales-para-dia-ui')) {
-                ejerciciosTemporalesParaDia.splice(index, 1);
-                renderizarEjerciciosTemporalesParaDia();
+                ejerciciosTemporalesParaDia.splice(index, 1); renderizarEjerciciosTemporalesParaDia();
             } else if (event.target.closest('#dias-temporales-ui')) {
-                rutinaTemporal.dias.splice(index, 1);
-                renderizarDiasTemporalesUI();
+                rutinaTemporal.dias.splice(index, 1); renderizarDiasTemporalesUI();
             }
         }
     });
-
-    // 8. Cargar Rutinas Guardadas (¡MODIFICADA!)
     function cargarRutinasGuardadas() {
         listaRutinas.innerHTML = '<h4>Rutinas Existentes:</h4>';
-        const transaction = db.transaction(['rutinas'], 'readonly');
-        const store = transaction.objectStore('rutinas');
+        const transaction = db.transaction(['rutinas'], 'readonly'); const store = transaction.objectStore('rutinas');
         store.openCursor().onsuccess = (event) => {
             const cursor = event.target.result;
             if (cursor) {
-                const rutina = cursor.value;
-                const divRutina = document.createElement('div');
-                divRutina.className = 'rutina-guardada';
-                
-                // AÑADIMOS EL BOTÓN "EDITAR"
-                let contenido = `
-                    <button class="btn-borrar-rutina" data-id="${rutina.id}">&times; Borrar</button>
-                    <button class="btn-editar-rutina" data-id="${rutina.id}">Editar</button>
-                    <strong>${rutina.nombre}</strong> (${rutina.dias.length} días)`;
-                
+                const rutina = cursor.value; const divRutina = document.createElement('div'); divRutina.className = 'rutina-guardada';
+                let contenido = `<button class="btn-borrar-rutina" data-id="${rutina.id}">&times; Borrar</button> <button class="btn-editar-rutina" data-id="${rutina.id}">Editar</button> <strong>${rutina.nombre}</strong> (${rutina.dias.length} días)`;
                 rutina.dias.forEach(dia => {
                     contenido += `<p><strong>${dia.nombreDia}</strong></p><ul>`;
-                    dia.ejercicios.forEach(ej => {
-                        contenido += `<li>${ej.nombre} (${ej.series} series)</li>`;
-                    });
+                    dia.ejercicios.forEach(ej => { contenido += `<li>${ej.nombre} (${ej.series} series)</li>`; });
                     contenido += '</ul>';
                 });
-                divRutina.innerHTML = contenido;
-                listaRutinas.appendChild(divRutina);
-                cursor.continue();
+                divRutina.innerHTML = contenido; listaRutinas.appendChild(divRutina); cursor.continue();
             }
         };
     }
-
-    // 9. Lógica para botones "Borrar" y "Editar" (¡MODIFICADA!)
     listaRutinas.addEventListener('click', (event) => {
-        // Botón Borrar
         if (event.target.matches('.btn-borrar-rutina')) {
             const id = parseInt(event.target.dataset.id);
-            if (confirm('¿Estás seguro de que quieres borrar esta rutina permanentemente?')) {
-                borrarRutina(id);
-            }
+            if (confirm('¿Estás seguro de que quieres borrar esta rutina permanentemente?')) { borrarRutina(id); }
         }
-        
-        // ¡NUEVO! Botón Editar
         if (event.target.matches('.btn-editar-rutina')) {
-            const id = parseInt(event.target.dataset.id);
-            cargarRutinaParaEditar(id);
+            const id = parseInt(event.target.dataset.id); cargarRutinaParaEditar(id);
         }
     });
-
     function borrarRutina(id) {
-        const transaction = db.transaction(['rutinas'], 'readwrite');
-        const store = transaction.objectStore('rutinas');
+        const transaction = db.transaction(['rutinas'], 'readwrite'); const store = transaction.objectStore('rutinas');
         const deleteRequest = store.delete(id);
-        deleteRequest.onsuccess = () => {
-            console.log('Rutina borrada', id);
-            cargarRutinasGuardadas();
-        };
+        deleteRequest.onsuccess = () => { console.log('Rutina borrada', id); cargarRutinasGuardadas(); };
         deleteRequest.onerror = (event) => console.error('Error al borrar rutina', event);
     }
-
-    // 10. ¡NUEVA FUNCIÓN! Cargar rutina para editar
     function cargarRutinaParaEditar(id) {
-        const transaction = db.transaction(['rutinas'], 'readonly');
-        const store = transaction.objectStore('rutinas');
+        const transaction = db.transaction(['rutinas'], 'readonly'); const store = transaction.objectStore('rutinas');
         const getRequest = store.get(id);
-        
         getRequest.onsuccess = () => {
-            const rutina = getRequest.result;
-            if (!rutina) {
-                console.error('No se encontró la rutina', id);
-                return;
-            }
-            
-            // Cargar los datos de la BD en las variables temporales
-            txtNombreRutina.value = rutina.nombre;
-            rutinaTemporal = rutina; // Carga la rutina completa (nombre, días, ejercicios)
-            idRutinaEditando = rutina.id; // ¡Marcamos que estamos en modo "edición"!
-            
-            // Limpiar formulario de "Día" (por si acaso)
-            ejerciciosTemporalesParaDia = [];
-            renderizarEjerciciosTemporalesParaDia();
-            txtNombreDia.value = '';
-
-            // Dibujar los días de la rutina cargada
+            const rutina = getRequest.result; if (!rutina) { console.error('No se encontró la rutina', id); return; }
+            txtNombreRutina.value = rutina.nombre; rutinaTemporal = rutina; idRutinaEditando = rutina.id;
+            ejerciciosTemporalesParaDia = []; renderizarEjerciciosTemporalesParaDia(); txtNombreDia.value = '';
             renderizarDiasTemporalesUI();
-            
-            // Llevar al usuario al formulario
-            txtNombreRutina.disabled = false;
-            seccionGestorRutinas.querySelector('h3').scrollIntoView({ behavior: 'smooth' });
+            txtNombreRutina.disabled = false; seccionGestorRutinas.querySelector('h3').scrollIntoView({ behavior: 'smooth' });
         };
-        
         getRequest.onerror = (event) => console.error('Error al cargar rutina para editar', event);
     }
 
     
     // --- MÓDULOS 2 y 3 (CALENDARIO Y REGISTRO) ---
-    // --- (Siguen pendientes de arreglar, sin cambios) ---
+    // --- ¡AQUÍ ESTÁ TODA LA LÓGICA NUEVA! ---
 
+    // MÓDULO 2: CALENDARIO (Sin cambios)
     function renderizarCalendario() {
         calendarioGrid.innerHTML = '';
         const hoy = new Date(); const mes = hoy.getMonth(); const ano = hoy.getFullYear();
@@ -304,13 +220,46 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     
+    // MÓDULO 3: REGISTRO DIARIO (¡GRANDES CAMBIOS!)
+
     function abrirRegistroParaDia(fecha) {
         tituloRegistroDia.textContent = `Registrar para el ${fecha}`;
-        ejerciciosDelDia.innerHTML = ''; txtComentarioDia.value = '';
+        
+        // Resetear la vista de registro
+        rutinaCompletaSeleccionada = null;
+        ejerciciosDelDia.innerHTML = '';
+        txtComentarioDia.value = '';
+        contenedorSelectDia.classList.add('oculto'); // Ocultar selector de día
+        
+        // Cargar las rutinas en el primer <select>
         cargarRutinasEnSelect();
+        
+        // ¡NUEVO! Comprobar si ya existe un registro para este día
+        const transaction = db.transaction(['registros'], 'readonly');
+        const store = transaction.objectStore('registros');
+        const getRequest = store.get(fecha);
+
+        getRequest.onsuccess = () => {
+            const registro = getRequest.result;
+            if (registro) {
+                // Si existe, precargamos los datos
+                txtComentarioDia.value = registro.comentario;
+                // Usamos un 'setTimeout' para asegurar que los <select> se llenen
+                // antes de intentar seleccionar los valores guardados.
+                setTimeout(() => {
+                    precargarRegistro(registro);
+                }, 100); // 100ms es usualmente suficiente
+            } else {
+                // Si no existe, dejamos los <select> listos para elegir
+                selectRutinaDelDia.value = "";
+                selectDiaDeRutina.innerHTML = '<option value="">-- Selecciona un día --</option>';
+            }
+        };
+
         mostrarSeccion('seccion-registro-diario');
     }
 
+    // Carga las rutinas en el primer <select>
     function cargarRutinasEnSelect() {
         selectRutinaDelDia.innerHTML = '<option value="">-- Selecciona una rutina --</option>';
         const transaction = db.transaction(['rutinas'], 'readonly');
@@ -327,11 +276,160 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // ¡NUEVA FUNCIÓN! Para precargar datos si el día ya fue registrado
+    function precargarRegistro(registro) {
+        // 1. Seleccionar la rutina
+        selectRutinaDelDia.value = registro.rutinaId;
+        
+        // 2. Simular el 'change' para cargar los días de esa rutina
+        // y luego seleccionar el día guardado
+        cargarDiasDeRutina(registro.rutinaId, () => {
+            selectDiaDeRutina.value = registro.diaIndex; // Seleccionar el día guardado
+            
+            // 3. Simular el 'change' del día para mostrar los ejercicios
+            // y luego rellenar las repeticiones
+            const diaSeleccionado = rutinaCompletaSeleccionada.dias[registro.diaIndex];
+            mostrarEjerciciosParaRegistrar(diaSeleccionado.ejercicios, registro.ejercicios);
+        });
+    }
+
+    // Evento para el PRIMER <select> (Rutinas)
     selectRutinaDelDia.addEventListener('change', (event) => {
-        ejerciciosDelDia.innerHTML = '<p style="color:red;">(Lógica de registro pendiente de actualizar)</p>';
+        const rutinaId = parseInt(event.target.value);
+        if (isNaN(rutinaId) || !rutinaId) {
+            rutinaCompletaSeleccionada = null;
+            contenedorSelectDia.classList.add('oculto');
+            ejerciciosDelDia.innerHTML = '';
+            return;
+        }
+        cargarDiasDeRutina(rutinaId);
+    });
+    
+    // ¡NUEVA FUNCIÓN! Carga los días en el SEGUNDO <select>
+    function cargarDiasDeRutina(rutinaId, callback) {
+        const transaction = db.transaction(['rutinas'], 'readonly');
+        const store = transaction.objectStore('rutinas');
+        const getRequest = store.get(rutinaId);
+
+        getRequest.onsuccess = () => {
+            rutinaCompletaSeleccionada = getRequest.result;
+            if (rutinaCompletaSeleccionada) {
+                // Rellenar el <select> de días
+                selectDiaDeRutina.innerHTML = '<option value="">-- Selecciona un día --</option>';
+                rutinaCompletaSeleccionada.dias.forEach((dia, index) => {
+                    const option = document.createElement('option');
+                    option.value = index; // Usamos el índice del array como valor
+                    option.textContent = dia.nombreDia;
+                    selectDiaDeRutina.appendChild(option);
+                });
+                // Mostrar el segundo <select>
+                contenedorSelectDia.classList.remove('oculto');
+                
+                // Si hay un callback (al precargar), ejecutarlo
+                if (callback) callback();
+            }
+        };
+    }
+
+    // Evento para el SEGUNDO <select> (Días)
+    selectDiaDeRutina.addEventListener('change', (event) => {
+        const diaIndex = parseInt(event.target.value);
+        if (isNaN(diaIndex) || !rutinaCompletaSeleccionada) {
+            ejerciciosDelDia.innerHTML = '';
+            return;
+        }
+        
+        const diaSeleccionado = rutinaCompletaSeleccionada.dias[diaIndex];
+        mostrarEjerciciosParaRegistrar(diaSeleccionado.ejercicios);
     });
 
+    // Muestra los campos para anotar repeticiones (¡MODIFICADA!)
+    // Ahora acepta un segundo parámetro opcional: los datos guardados
+    function mostrarEjerciciosParaRegistrar(ejercicios, datosGuardados = []) {
+        ejerciciosDelDia.innerHTML = '';
+        ejercicios.forEach((ej, index) => {
+            const divEj = document.createElement('div');
+            divEj.className = 'ejercicio-para-registrar';
+            divEj.innerHTML = `<strong>${ej.nombre} (${ej.series} series)</strong>`;
+            
+            // Buscar si hay datos guardados para este ejercicio
+            const datosEj = datosGuardados.find(d => d.nombre === ej.nombre);
+
+            for (let i = 1; i <= ej.series; i++) {
+                const label = document.createElement('label');
+                label.textContent = ` Serie ${i}: `;
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.placeholder = 'Reps';
+                input.className = 'rep-input';
+                input.dataset.ejercicioIndex = index;
+                input.dataset.serieIndex = i - 1;
+                
+                // ¡NUEVO! Rellenar si hay datos
+                if (datosEj && datosEj.reps[i - 1] !== undefined) {
+                    input.value = datosEj.reps[i - 1];
+                }
+                
+                divEj.appendChild(label);
+                divEj.appendChild(input);
+            }
+            ejerciciosDelDia.appendChild(divEj);
+        });
+    }
+
+    // Botón final para guardar (¡MODIFICADO!)
     btnGuardarRegistro.addEventListener('click', () => {
-        alert("La función de guardar registro será actualizada en el siguiente paso.");
+        if (!fechaSeleccionadaGlobal || !rutinaCompletaSeleccionada) {
+            alert('Error: no hay fecha o rutina seleccionada.');
+            return;
+        }
+        
+        const diaIndex = parseInt(selectDiaDeRutina.value);
+        if (isNaN(diaIndex)) {
+            alert('Por favor, selecciona un día de la rutina.');
+            return;
+        }
+
+        // Recolectar datos de las repeticiones
+        const inputsReps = document.querySelectorAll('.rep-input');
+        const ejerciciosRegistrados = {};
+
+        inputsReps.forEach(input => {
+            const ejIndex = input.dataset.ejercicioIndex;
+            const repValue = input.value ? parseInt(input.value) : 0;
+            
+            if (!ejerciciosRegistrados[ejIndex]) {
+                // Obtener el nombre del ejercicio de la rutina base
+                const nombre = rutinaCompletaSeleccionada.dias[diaIndex].ejercicios[ejIndex].nombre;
+                ejerciciosRegistrados[ejIndex] = { nombre: nombre, reps: [] };
+            }
+            ejerciciosRegistrados[ejIndex].reps.push(repValue);
+        });
+
+        const registroFinalEjercicios = Object.values(ejerciciosRegistrados);
+
+        // Crear el objeto de registro completo
+        const registroDelDia = {
+            fecha: fechaSeleccionadaGlobal,
+            rutinaId: rutinaCompletaSeleccionada.id,
+            rutinaNombre: rutinaCompletaSeleccionada.nombre,
+            diaIndex: diaIndex, // Guardamos el índice del día
+            diaNombre: rutinaCompletaSeleccionada.dias[diaIndex].nombreDia,
+            ejercicios: registroFinalEjercicios,
+            comentario: txtComentarioDia.value
+        };
+
+        // Guardar en la BD (usamos 'put' para crear o sobreescribir)
+        const transaction = db.transaction(['registros'], 'readwrite');
+        const store = transaction.objectStore('registros');
+        const putRequest = store.put(registroDelDia); 
+
+        putRequest.onsuccess = () => {
+            alert('¡Entrenamiento guardado para el día ' + fechaSeleccionadaGlobal + '!');
+            renderizarCalendario(); // Recargar calendario para mostrar el día en verde
+            mostrarSeccion('seccion-calendario'); // Volver al calendario
+        };
+
+        putRequest.onerror = (event) => console.error('Error al guardar el registro:', event);
     });
 });

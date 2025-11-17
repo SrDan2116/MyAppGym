@@ -8,7 +8,6 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-
     <header>
         <h1>Mi Control de Gimnasio</h1>
         <nav>
@@ -16,7 +15,6 @@
             <button id="btn-nav-rutinas">Gestionar Rutinas</button>
         </nav>
     </header>
-
     <main>
         <section id="seccion-calendario">
             <h2>Calendario (Mes Actual)</h2>
@@ -24,15 +22,23 @@
         </section>
 
         <section id="seccion-registro-diario" class="oculto">
-            <h2 id="titulo-registro-dia">Registrar para...</h2>
+            <h2 id="titulo-registro-dia">Registrar...</h2>
             <button id="btn-volver-calendario">Volver al Calendario</button>
             
-            <label for="select-rutina-del-dia">Selecciona la rutina de hoy:</label>
+            <label for="select-rutina-del-dia">1. Selecciona la Rutina:</label>
             <select id="select-rutina-del-dia">
                 <option value="">-- Cargar mis rutinas --</option>
             </select>
 
-            <div id="ejercicios-del-dia"></div>
+            <div id="contenedor-select-dia" class="oculto">
+                <label for="select-dia-de-rutina">2. Selecciona el Día de la Rutina:</label>
+                <select id="select-dia-de-rutina">
+                    <option value="">-- Selecciona un día --</option>
+                </select>
+            </div>
+
+            <div id="ejercicios-del-dia">
+                </div>
             
             <label for="txt-comentario-dia">Comentario del día:</label>
             <textarea id="txt-comentario-dia" placeholder="..."></textarea>
@@ -42,41 +48,27 @@
 
         <section id="seccion-gestor-rutinas" class="oculto">
             <h2>Mis Rutinas</h2>
-            
-            <div id="lista-rutinas">
-                </div>
+            <div id="lista-rutinas"></div>
             <hr>
-            
             <h3>Crear/Modificar Nueva Rutina</h3>
-            
             <input type="text" id="txt-nombre-rutina" placeholder="Nombre de la rutina (Ej: PPL 6 Días)">
-            
             <div id="dias-en-creacion-container">
                 <h4>Días de esta rutina:</h4>
-                <div id="dias-temporales-ui">
-                    </div>
+                <div id="dias-temporales-ui"></div>
             </div>
-
             <fieldset class="form-agregar-dia">
                 <legend>Añadir Día a la Rutina</legend>
-                
                 <input type="text" id="txt-nombre-dia" placeholder="Nombre del Día (Ej: Día 1 - Push)">
-                
-                <div id="ejercicios-temporales-para-dia-ui">
-                    </div>
-
+                <div id="ejercicios-temporales-para-dia-ui"></div>
                 <div class="form-agregar-ejercicio">
                     <input type="text" id="txt-nombre-ejercicio" placeholder="Nombre del ejercicio">
                     <input type="number" id="num-series" placeholder="# Series">
                     <button type="button" id="btn-agregar-ejercicio-a-dia">Añadir Ejercicio al Día</button>
                 </div>
-                
                 <button type="button" id="btn-guardar-dia-en-rutina">Guardar este Día</button>
             </fieldset>
-            
             <button id="btn-guardar-rutina-completa">Guardar Rutina Completa en la BD</button>
             <button type="button" id="btn-cancelar-rutina">Cancelar/Limpiar</button>
-
         </section>
     </main>
 
