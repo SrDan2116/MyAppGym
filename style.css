@@ -53,3 +53,51 @@ nav button {
     margin-right: 5px;
     text-align: center;
 }
+
+/* --- Estilos Módulo 1 (Gestor Rutinas) --- */
+.rutina-guardada {
+    border: 1px solid #ccc;
+    background: #fff;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.rutina-guardada strong {
+    font-size: 1.2em;
+}
+.btn-borrar-rutina {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    float: right;
+    cursor: pointer;
+}
+
+/* Formulario de creación */
+#dias-en-creacion-container {
+    background: #f4f4f4;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+.form-agregar-dia {
+    border: 1px dashed #007BFF;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+.ejercicio-temporal-item, .dia-temporal-item {
+    background: #e9ecef;
+    padding: 5px;
+    margin-bottom: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.btn-borrar-item {
+    background: #6c757d;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 2px 8px;
+}
