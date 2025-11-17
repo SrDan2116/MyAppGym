@@ -1,10 +1,15 @@
-import { formatTime, mostrarSeccion } from './utils.js';
+import { formatTime, mostrarSeccion } from './utils.js'; // Importamos funciones
 
 let db;
 let fechaSeleccionadaGlobal = null;
 let rutinaCompletaSeleccionada = null;
 let elapsedSeconds = 0;
 let timerInterval = null;
+
+// ¡NUEVO! Variables para el estado del calendario
+let mesMostrado;
+let anoMostrado;
+const nombresMeses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 // Selectores del DOM
 const calendarioGrid = document.getElementById('calendario-grid');
@@ -22,10 +27,21 @@ const vistaReadonlyRegistro = document.getElementById('vista-readonly-registro')
 const formularioEditableRegistro = document.getElementById('formulario-editable-registro');
 const readonlyContenido = document.getElementById('readonly-contenido');
 
+// ¡NUEVO! Selectores del navegador de mes
+const btnMesAnterior = document.getElementById('btn-mes-anterior');
+const btnMesSiguiente = document.getElementById('btn-mes-siguiente');
+const tituloMesAno = document.getElementById('titulo-mes-ano');
+
+
 export function initCalendario(database) {
     db = database;
+    
+    // ¡NUEVO! Inicializar fecha
+    const hoy = new Date();
+    mesMostrado = hoy.getMonth(); // 0-11
+    anoMostrado = hoy.getFullYear();
 
-    // Listeners
+    // Listeners (los de siempre)
     btnGuardarRegistro.addEventListener('click', guardarRegistro);
     selectRutinaDelDia.addEventListener('change', (event) => {
         const rutinaId = parseInt(event.target.value);
@@ -43,32 +59,80 @@ export function initCalendario(database) {
             ejerciciosDelDia.innerHTML = ''; return;
         }
         const diaSeleccionado = rutinaCompletaSeleccionada.dias[diaIndex];
-        // Llamamos a la nueva función sin datos guardados
         mostrarEjerciciosParaRegistrar(diaSeleccionado.ejercicios);
     });
 
     btnTimerStart.addEventListener('click', startTimer);
     btnTimerPause.addEventListener('click', pauseTimer);
     btnTimerReset.addEventListener('click', resetTimer);
+    
+    // ¡NUEVO! Listeners del navegador de mes
+    btnMesAnterior.addEventListener('click', () => cambiarMes(-1));
+    btnMesSiguiente.addEventListener('click', () => cambiarMes(1));
 
+    // Renderizar el calendario inicial (ahora usará mesMostrado y anoMostrado)
     renderizarCalendario();
 }
 
-// --- Funciones del Módulo ---
+// ¡NUEVA! Función para cambiar de mes
+function cambiarMes(direccion) {
+    mesMostrado += direccion;
+    
+    // Manejar cambio de año
+    if (mesMostrado > 11) {
+        mesMostrado = 0; // Enero
+        anoMostrado++;
+    } else if (mesMostrado < 0) {
+        mesMostrado = 11; // Diciembre
+        anoMostrado--;
+    }
+    
+    // Volver a dibujar el calendario con la nueva fecha
+    renderizarCalendario();
+}
+
+
+// ¡MODIFICADO! Ahora usa las variables globales
 export function renderizarCalendario() {
     calendarioGrid.innerHTML = '';
-    const hoy = new Date(); const mes = hoy.getMonth(); const ano = hoy.getFullYear();
+    
+    // Usar las variables globales en lugar de 'new Date()'
+    const mes = mesMostrado;
+    const ano = anoMostrado;
+
+    // Actualizar el título
+    tituloMesAno.textContent = `${nombresMeses[mes]} ${ano}`;
+    
     const diasEnMes = new Date(ano, mes + 1, 0).getDate();
+    
+    // (Lógica de IndexedDB no cambia)
     const transaction = db.transaction(['registros'], 'readonly');
     const store = transaction.objectStore('registros');
     const getAllRequest = store.getAll();
+    
     getAllRequest.onsuccess = () => {
         const registros = getAllRequest.result.map(r => r.fecha);
+        
+        // ¡NUEVO! Añadir días vacíos al inicio (para alinear el 1er día de la semana)
+        const primerDiaSemana = new Date(ano, mes, 1).getDay(); // 0=Domingo, 1=Lunes
+        for (let i = 0; i < primerDiaSemana; i++) {
+            const divVacio = document.createElement('div');
+            divVacio.className = 'dia-vacio';
+            calendarioGrid.appendChild(divVacio);
+        }
+        
+        // Dibujar los días del mes
         for (let dia = 1; dia <= diasEnMes; dia++) {
-            const divDia = document.createElement('div'); divDia.className = 'dia-calendario';
+            const divDia = document.createElement('div');
+            divDia.className = 'dia-calendario';
             divDia.textContent = dia;
+            
+            // Usar 'ano' y 'mes' variables para la fecha
             const fechaISO = `${ano}-${(mes + 1).toString().padStart(2, '0')}-${dia.toString().padStart(2, '0')}`;
-            if (registros.includes(fechaISO)) divDia.classList.add('registrado');
+            
+            if (registros.includes(fechaISO)) {
+                divDia.classList.add('registrado');
+            }
             divDia.addEventListener('click', () => {
                 fechaSeleccionadaGlobal = fechaISO;
                 abrirRegistroParaDia(fechaISO);
@@ -78,6 +142,10 @@ export function renderizarCalendario() {
     };
 }
 
+// (El resto de funciones: abrirRegistroParaDia, renderizarRegistroReadOnly, 
+// cargarRutinasEnSelect, cargarDiasDeRutina, mostrarEjerciciosParaRegistrar,
+// guardarRegistro, y el cronómetro NO CAMBIAN)
+
 function abrirRegistroParaDia(fecha) {
     tituloRegistroDia.textContent = `Registro del ${fecha}`;
     const transaction = db.transaction(['registros'], 'readonly');
@@ -86,7 +154,6 @@ function abrirRegistroParaDia(fecha) {
     getRequest.onsuccess = () => {
         const registro = getRequest.result;
         if (registro) {
-            // ¡MODIFICADO! Llamamos a la nueva función ReadOnly
             renderizarRegistroReadOnly(registro);
             vistaReadonlyRegistro.classList.remove('oculto');
             formularioEditableRegistro.classList.add('oculto');
@@ -101,12 +168,10 @@ function abrirRegistroParaDia(fecha) {
             selectRutinaDelDia.value = "";
             selectDiaDeRutina.innerHTML = '<option value="">-- Selecciona un día --</option>';
         }
-        // Esto lo maneja main.js, pero lo dejamos por si acaso
         mostrarSeccion('seccion-registro-diario');
     };
 }
 
-// ¡MODIFICADO! Función ReadOnly
 function renderizarRegistroReadOnly(registro) {
     let html = `
         <p><strong>Rutina:</strong> ${registro.rutinaNombre}</p>
@@ -114,16 +179,13 @@ function renderizarRegistroReadOnly(registro) {
         <p><strong>Tiempo Total:</strong> ${formatTime(registro.tiempoTotal)}</p>
         <h4>Ejercicios Registrados:</h4>
     `;
-    
     registro.ejercicios.forEach(ej => {
         html += `<p><strong>${ej.nombre}</strong></p><ul>`;
-        // ¡NUEVO! Iteramos sobre la nueva estructura de series
         ej.series.forEach((serie, i) => {
             html += `<li>Serie ${i + 1}: <span>${serie.peso} kg &times; ${serie.reps} reps</span></li>`;
         });
         html += '</ul>';
     });
-    
     readonlyContenido.innerHTML = html;
 }
 
@@ -162,50 +224,40 @@ function cargarDiasDeRutina(rutinaId, callback) {
     };
 }
 
-// ¡MODIFICADO! Mostrar inputs de Peso y Reps
 function mostrarEjerciciosParaRegistrar(ejercicios) {
     ejerciciosDelDia.innerHTML = '';
     ejercicios.forEach((ej, index) => {
         const divEj = document.createElement('div');
         divEj.className = 'ejercicio-para-registrar';
         divEj.innerHTML = `<strong>${ej.nombre} (${ej.series} series)</strong>`;
-        
         for (let i = 1; i <= ej.series; i++) {
             const divSerie = document.createElement('div');
             divSerie.className = 'serie-registro';
-            
             const label = document.createElement('label');
             label.textContent = `Serie ${i}:`;
-            
-            // Input para PESO
             const inputPeso = document.createElement('input');
             inputPeso.type = 'number';
             inputPeso.placeholder = 'Peso';
             inputPeso.className = 'peso-input';
             inputPeso.dataset.ejercicioIndex = index;
             inputPeso.dataset.serieIndex = i - 1;
-
-            // Input para REPS
             const inputReps = document.createElement('input');
             inputReps.type = 'number';
             inputReps.placeholder = 'Reps';
             inputReps.className = 'rep-input';
             inputReps.dataset.ejercicioIndex = index;
             inputReps.dataset.serieIndex = i - 1;
-
             divSerie.appendChild(label);
             divSerie.appendChild(inputPeso);
-            divSerie.appendChild(document.createTextNode('kg \u00D7')); // Símbolo 'x'
+            divSerie.appendChild(document.createTextNode('kg \u00D7'));
             divSerie.appendChild(inputReps);
             divSerie.appendChild(document.createTextNode('reps'));
-            
             divEj.appendChild(divSerie);
         }
         ejerciciosDelDia.appendChild(divEj);
     });
 }
 
-// ¡MODIFICADO! Guardar la nueva estructura
 function guardarRegistro() {
     if (!fechaSeleccionadaGlobal || !rutinaCompletaSeleccionada) {
         alert('Error: no hay fecha o rutina seleccionada.'); return;
@@ -215,52 +267,37 @@ function guardarRegistro() {
         alert('Por favor, selecciona un día de la rutina.'); return;
     }
     pauseTimer(); 
-    
-    // Obtenemos TODOS los inputs de peso y reps
     const inputsPeso = document.querySelectorAll('.peso-input');
     const inputsReps = document.querySelectorAll('.rep-input');
-    
     const ejerciciosRegistrados = {};
-
-    // Asumimos que inputsPeso y inputsReps tienen el mismo orden y longitud
     for (let i = 0; i < inputsReps.length; i++) {
         const inputRep = inputsReps[i];
         const inputPeso = inputsPeso[i];
-        
         const ejIndex = inputRep.dataset.ejercicioIndex;
-        
         const repValue = inputRep.value ? parseInt(inputRep.value) : 0;
         const pesoValue = inputPeso.value ? parseFloat(inputPeso.value) : 0;
-        
         if (!ejerciciosRegistrados[ejIndex]) {
             const nombre = rutinaCompletaSeleccionada.dias[diaIndex].ejercicios[ejIndex].nombre;
-            ejerciciosRegistrados[ejIndex] = { nombre: nombre, series: [] }; // ¡Ahora es un array 'series'!
+            ejerciciosRegistrados[ejIndex] = { nombre: nombre, series: [] };
         }
-        
-        // Añadimos el objeto de la serie
         ejerciciosRegistrados[ejIndex].series.push({ peso: pesoValue, reps: repValue });
     }
-    
     const registroFinalEjercicios = Object.values(ejerciciosRegistrados);
-    
     const registroDelDia = {
         fecha: fechaSeleccionadaGlobal,
         rutinaId: rutinaCompletaSeleccionada.id,
         rutinaNombre: rutinaCompletaSeleccionada.nombre,
         diaIndex: diaIndex,
         diaNombre: rutinaCompletaSeleccionada.dias[diaIndex].nombreDia,
-        ejercicios: registroFinalEjercicios, // ¡Nueva estructura!
+        ejercicios: registroFinalEjercicios,
         tiempoTotal: elapsedSeconds
     };
-
     const transaction = db.transaction(['registros'], 'readwrite');
     const store = transaction.objectStore('registros');
     const putRequest = store.put(registroDelDia); 
-
     putRequest.onsuccess = () => {
         alert('¡Entrenamiento guardado para el día ' + fechaSeleccionadaGlobal + '!');
         renderizarCalendario();
-        // Esto lo maneja main.js
         mostrarSeccion('seccion-calendario');
     };
     putRequest.onerror = (event) => console.error('Error al guardar el registro:', event);

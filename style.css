@@ -435,3 +435,35 @@ nav button i {
 .btn-config.btn-importar {
     background-color: var(--color-error); /* Rojo peligro */
 }
+/* --- Calendario: Navegador de Mes --- */
+.navegador-mes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--color-bg-secundario);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+.navegador-mes h2 {
+    margin: 0;
+    font-size: 1.4em;
+    color: var(--color-secundario); /* Color menta */
+}
+.navegador-mes button {
+    background-color: var(--color-superficie);
+    color: var(--color-texto-principal);
+    width: 45px; /* Ancho fijo */
+    height: 45px; /* Alto fijo */
+    padding: 0;
+    font-size: 1.5em;
+    line-height: 45px; /* Centrar el texto verticalmente */
+}
+.navegador-mes button:hover {
+    background-color: #3a3a3a;
+}
+.dia-vacio {
+    padding: 15px 0;
+    border: none;
+    background-color: transparent;
+}
