@@ -1,16 +1,18 @@
 // 1. CAMBIA EL NOMBRE DEL CACHÉ
-const CACHE_NAME = 'notas-cache-v11';
+const CACHE_NAME = 'notas-cache-v12';
 
 // 2. AÑADE TODOS LOS ARCHIVOS A LA LISTA
 const urlsToCache = [
-    './', // Esto es clave: representa la raíz de tu app
+    './',
     'index.html',
     'style.css',
-    'app.js',
-    'manifest.json'
-    // Si creaste los íconos, añádelos aquí también:
-    // 'images/icon-192.png',
-    // 'images/icon-512.png'
+    'manifest.json',
+    'js/main.js',             // <-- AÑADIR
+    'js/db.js',               // <-- AÑADIR
+    'js/utils.js',            // <-- AÑADIR
+    'js/ui_rutinas.js',       // <-- AÑADIR
+    'js/ui_calendario.js',    // <-- AÑADIR
+    'js/ui_peso.js'           // <-- AÑADIR
 ];
 
 // Evento 'install': Se dispara cuando el SW se instala
