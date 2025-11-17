@@ -6,16 +6,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let ejerciciosTemporalesParaDia = [];
     let idRutinaEditando = null;
     let rutinaCompletaSeleccionada = null;
-    
-    // --- ¡NUEVO! Variables del Cronómetro ---
     let elapsedSeconds = 0;
     let timerInterval = null;
+    
+    // --- Selectores del DOM ---
     const timerDisplay = document.getElementById('timer-display');
     const btnTimerStart = document.getElementById('btn-timer-start');
     const btnTimerPause = document.getElementById('btn-timer-pause');
     const btnTimerReset = document.getElementById('btn-timer-reset');
-
-    // --- Selectores del DOM (El resto) ---
     const btnNavCalendario = document.getElementById('btn-nav-calendario');
     const btnNavRutinas = document.getElementById('btn-nav-rutinas');
     const seccionCalendario = document.getElementById('seccion-calendario');
@@ -41,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const ejerciciosDelDia = document.getElementById('ejercicios-del-dia');
     const txtComentarioDia = document.getElementById('txt-comentario-dia');
     const btnGuardarRegistro = document.getElementById('btn-guardar-registro');
-
 
     // --- Inicialización de la BD (Sin cambios) ---
     const request = indexedDB.open('GymAppDB', 2); 
@@ -78,8 +75,9 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarSeccion('seccion-calendario');
     });
 
-    // --- MÓDULO 1: GESTOR DE RUTINAS (Sin cambios) ---
-    // (Omitido por brevedad - es el mismo código de la respuesta anterior)
+    // --- MÓDULO 1: GESTOR DE RUTINAS (CAMBIOS LÓGICA ACORDEÓN) ---
+    
+    // (Funciones de creación sin cambios)
     btnAgregarEjercicioADia.addEventListener('click', () => {
         const nombreEjercicio = txtNombreEjercicio.value; const series = parseInt(numSeries.value);
         if (nombreEjercicio.trim() === '' || isNaN(series) || series <= 0) { alert('Ingresa nombre y series válidos.'); return; }
@@ -143,32 +141,89 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
+
+    // ¡MODIFICADO! Cargar Rutinas Guardadas
     function cargarRutinasGuardadas() {
         listaRutinas.innerHTML = '<h4>Rutinas Existentes:</h4>';
-        const transaction = db.transaction(['rutinas'], 'readonly'); const store = transaction.objectStore('rutinas');
+        const transaction = db.transaction(['rutinas'], 'readonly');
+        const store = transaction.objectStore('rutinas');
         store.openCursor().onsuccess = (event) => {
             const cursor = event.target.result;
             if (cursor) {
-                const rutina = cursor.value; const divRutina = document.createElement('div'); divRutina.className = 'rutina-guardada';
-                let contenido = `<button class="btn-borrar-rutina" data-id="${rutina.id}">&times; Borrar</button> <button class="btn-editar-rutina" data-id="${rutina.id}">Editar</button> <strong>${rutina.nombre}</strong> (${rutina.dias.length} días)`;
+                const rutina = cursor.value;
+                const divRutina = document.createElement('div');
+                divRutina.className = 'rutina-guardada';
+
+                // 1. Cabecera (lo que se clickea)
+                const divHeader = document.createElement('div');
+                divHeader.className = 'rutina-header';
+                divHeader.innerHTML = `
+                    <span class="rutina-nombre">${rutina.nombre} (${rutina.dias.length} días)</span>
+                    <span class="rutina-acordeon-icono">&#x25BC;</span> `;
+
+                // 2. Controles (Editar/Borrar)
+                const divControles = document.createElement('div');
+                divControles.className = 'rutina-controles';
+                divControles.innerHTML = `
+                    <button class="btn-editar-rutina" data-id="${rutina.id}">Editar</button>
+                    <button class="btn-borrar-rutina" data-id="${rutina.id}">&times; Borrar</button>
+                `;
+                
+                // 3. Cuerpo (Detalles ocultos)
+                const divBody = document.createElement('div');
+                divBody.className = 'rutina-detalles oculto'; // Oculto por defecto
+                
+                let contenidoDetalles = '';
                 rutina.dias.forEach(dia => {
-                    contenido += `<p><strong>${dia.nombreDia}</strong></p><ul>`;
-                    dia.ejercicios.forEach(ej => { contenido += `<li>${ej.nombre} (${ej.series} series)</li>`; });
-                    contenido += '</ul>';
+                    contenidoDetalles += `<p><strong>${dia.nombreDia}</strong></p><ul>`;
+                    dia.ejercicios.forEach(ej => { contenidoDetalles += `<li>${ej.nombre} (${ej.series} series)</li>`; });
+                    contenidoDetalles += '</ul>';
                 });
-                divRutina.innerHTML = contenido; listaRutinas.appendChild(divRutina); cursor.continue();
+                divBody.innerHTML = contenidoDetalles;
+                
+                // Ensamblar
+                divRutina.appendChild(divHeader);
+                divRutina.appendChild(divControles);
+                divRutina.appendChild(divBody);
+                listaRutinas.appendChild(divRutina);
+                
+                cursor.continue();
             }
         };
     }
+
+    // ¡MODIFICADO! Event listener para el acordeón y botones
     listaRutinas.addEventListener('click', (event) => {
+        // Botón Borrar
         if (event.target.matches('.btn-borrar-rutina')) {
             const id = parseInt(event.target.dataset.id);
-            if (confirm('¿Estás seguro de que quieres borrar esta rutina permanentemente?')) { borrarRutina(id); }
+            if (confirm('¿Estás seguro de que quieres borrar esta rutina permanentemente?')) {
+                borrarRutina(id);
+            }
         }
+        
+        // Botón Editar
         if (event.target.matches('.btn-editar-rutina')) {
-            const id = parseInt(event.target.dataset.id); cargarRutinaParaEditar(id);
+            const id = parseInt(event.target.dataset.id);
+            cargarRutinaParaEditar(id);
+        }
+        
+        // Lógica de Acordeón
+        if (event.target.closest('.rutina-header')) {
+            const header = event.target.closest('.rutina-header');
+            const body = header.parentElement.querySelector('.rutina-detalles');
+            if (body) {
+                body.classList.toggle('oculto');
+                // Cambiar ícono de flecha (opcional pero bueno)
+                const icono = header.querySelector('.rutina-acordeon-icono');
+                if (icono) {
+                    icono.innerHTML = body.classList.contains('oculto') ? '&#x25BC;' : '&#x25B2;'; // Flecha abajo / arriba
+                }
+            }
         }
     });
+
+    // (borrarRutina y cargarRutinaParaEditar no cambian)
     function borrarRutina(id) {
         const transaction = db.transaction(['rutinas'], 'readwrite'); const store = transaction.objectStore('rutinas');
         const deleteRequest = store.delete(id);
@@ -190,9 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     // --- MÓDULOS 2 y 3 (CALENDARIO Y REGISTRO) ---
-    // --- (Pequeños cambios para el cronómetro) ---
-
-    function renderizarCalendario() { // (Sin cambios)
+    // --- (Sin cambios en esta actualización) ---
+    function renderizarCalendario() {
         calendarioGrid.innerHTML = '';
         const hoy = new Date(); const mes = hoy.getMonth(); const ano = hoy.getFullYear();
         const diasEnMes = new Date(ano, mes + 1, 0).getDate();
@@ -214,50 +268,33 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
-    
-    // ¡MODIFICADO!
     function abrirRegistroParaDia(fecha) {
         tituloRegistroDia.textContent = `Registrar para el ${fecha}`;
-        
-        // ¡NUEVO! Resetea el cronómetro cada vez que abres
         resetTimer(); 
-        
         rutinaCompletaSeleccionada = null;
         ejerciciosDelDia.innerHTML = '';
         txtComentarioDia.value = '';
         contenedorSelectDia.classList.add('oculto');
-        
         cargarRutinasEnSelect();
-        
         const transaction = db.transaction(['registros'], 'readonly');
         const store = transaction.objectStore('registros');
         const getRequest = store.get(fecha);
-
         getRequest.onsuccess = () => {
             const registro = getRequest.result;
             if (registro) {
-                // Si existe, precargamos los datos
                 txtComentarioDia.value = registro.comentario;
-
-                // ¡NUEVO! Cargar el tiempo guardado
                 if (registro.tiempoTotal) {
                     elapsedSeconds = registro.tiempoTotal;
                     timerDisplay.textContent = formatTime(elapsedSeconds);
                 }
-
-                setTimeout(() => {
-                    precargarRegistro(registro);
-                }, 100);
+                setTimeout(() => { precargarRegistro(registro); }, 100);
             } else {
                 selectRutinaDelDia.value = "";
                 selectDiaDeRutina.innerHTML = '<option value="">-- Selecciona un día --</option>';
             }
         };
-
         mostrarSeccion('seccion-registro-diario');
     }
-
-    // (Sin cambios)
     function cargarRutinasEnSelect() {
         selectRutinaDelDia.innerHTML = '<option value="">-- Selecciona una rutina --</option>';
         const transaction = db.transaction(['rutinas'], 'readonly');
@@ -273,8 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
-
-    // (Sin cambios)
     function precargarRegistro(registro) {
         selectRutinaDelDia.value = registro.rutinaId;
         cargarDiasDeRutina(registro.rutinaId, () => {
@@ -283,8 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
             mostrarEjerciciosParaRegistrar(diaSeleccionado.ejercicios, registro.ejercicios);
         });
     }
-
-    // (Sin cambios)
     selectRutinaDelDia.addEventListener('change', (event) => {
         const rutinaId = parseInt(event.target.value);
         if (isNaN(rutinaId) || !rutinaId) {
@@ -295,8 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         cargarDiasDeRutina(rutinaId);
     });
-    
-    // (Sin cambios)
     function cargarDiasDeRutina(rutinaId, callback) {
         const transaction = db.transaction(['rutinas'], 'readonly');
         const store = transaction.objectStore('rutinas');
@@ -315,8 +346,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
-
-    // (Sin cambios)
     selectDiaDeRutina.addEventListener('change', (event) => {
         const diaIndex = parseInt(event.target.value);
         if (isNaN(diaIndex) || !rutinaCompletaSeleccionada) {
@@ -325,8 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const diaSeleccionado = rutinaCompletaSeleccionada.dias[diaIndex];
         mostrarEjerciciosParaRegistrar(diaSeleccionado.ejercicios);
     });
-
-    // (Sin cambios)
     function mostrarEjerciciosParaRegistrar(ejercicios, datosGuardados = []) {
         ejerciciosDelDia.innerHTML = '';
         ejercicios.forEach((ej, index) => {
@@ -347,8 +374,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ejerciciosDelDia.appendChild(divEj);
         });
     }
-
-    // ¡MODIFICADO!
     btnGuardarRegistro.addEventListener('click', () => {
         if (!fechaSeleccionadaGlobal || !rutinaCompletaSeleccionada) {
             alert('Error: no hay fecha o rutina seleccionada.'); return;
@@ -357,10 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isNaN(diaIndex)) {
             alert('Por favor, selecciona un día de la rutina.'); return;
         }
-        
-        // ¡NUEVO! Detenemos el timer al guardar
         pauseTimer(); 
-
         const inputsReps = document.querySelectorAll('.rep-input');
         const ejerciciosRegistrados = {};
         inputsReps.forEach(input => {
@@ -373,8 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ejerciciosRegistrados[ejIndex].reps.push(repValue);
         });
         const registroFinalEjercicios = Object.values(ejerciciosRegistrados);
-
-        // Crear el objeto de registro completo
         const registroDelDia = {
             fecha: fechaSeleccionadaGlobal,
             rutinaId: rutinaCompletaSeleccionada.id,
@@ -383,14 +403,11 @@ document.addEventListener('DOMContentLoaded', () => {
             diaNombre: rutinaCompletaSeleccionada.dias[diaIndex].nombreDia,
             ejercicios: registroFinalEjercicios,
             comentario: txtComentarioDia.value,
-            // ¡NUEVO! Guardamos el tiempo total
             tiempoTotal: elapsedSeconds 
         };
-
         const transaction = db.transaction(['registros'], 'readwrite');
         const store = transaction.objectStore('registros');
         const putRequest = store.put(registroDelDia); 
-
         putRequest.onsuccess = () => {
             alert('¡Entrenamiento guardado para el día ' + fechaSeleccionadaGlobal + '!');
             renderizarCalendario();
@@ -399,36 +416,30 @@ document.addEventListener('DOMContentLoaded', () => {
         putRequest.onerror = (event) => console.error('Error al guardar el registro:', event);
     });
 
-    // --- ¡NUEVO! LÓGICA DEL CRONÓMETRO ---
-
+    // --- CRONÓMETRO (Sin cambios) ---
     btnTimerStart.addEventListener('click', startTimer);
     btnTimerPause.addEventListener('click', pauseTimer);
     btnTimerReset.addEventListener('click', resetTimer);
-
     function startTimer() {
-        if (timerInterval) return; // Ya está corriendo
+        if (timerInterval) return;
         timerInterval = setInterval(() => {
             elapsedSeconds++;
             timerDisplay.textContent = formatTime(elapsedSeconds);
         }, 1000);
     }
-
     function pauseTimer() {
         clearInterval(timerInterval);
         timerInterval = null;
     }
-
     function resetTimer() {
         pauseTimer();
         elapsedSeconds = 0;
         timerDisplay.textContent = "00:00:00";
     }
-
     function formatTime(totalSeconds) {
         const hours = Math.floor(totalSeconds / 3600);
         const minutes = Math.floor((totalSeconds % 3600) / 60);
         const seconds = totalSeconds % 60;
-        // padStart(2, '0') asegura que siempre haya dos dígitos (ej: '05' en vez de '5')
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
 });
