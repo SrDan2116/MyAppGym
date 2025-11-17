@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi App de Gimnasio</title>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
 </head>
@@ -18,6 +16,7 @@
             <button id="btn-nav-calendario"><i class="bi bi-calendar-event-fill"></i> Calendario</button>
             <button id="btn-nav-rutinas"><i class="bi bi-journal-text"></i> Rutinas</button>
             <button id="btn-nav-peso"><i class="bi bi-bar-chart-line-fill"></i> Peso</button>
+            <button id="btn-nav-config"><i class="bi bi-gear-fill"></i> Config</button>
         </nav>
     </header>
     <main>
@@ -34,12 +33,10 @@
         <section id="seccion-registro-diario" class="oculto">
             <h2 id="titulo-registro-dia">Registrar...</h2>
             <button id="btn-volver-calendario">Volver al Calendario</button>
-
             <div id="vista-readonly-registro" class="oculto">
                 <h3>Registro Guardado (Solo Lectura)</h3>
                 <div id="readonly-contenido"></div>
             </div>
-
             <div id="formulario-editable-registro">
                 <div class="cronometro-container">
                     <h3>Tiempo de Sesión</h3>
@@ -55,9 +52,7 @@
                     <label for="select-dia-de-rutina">2. Selecciona el Día:</label>
                     <select id="select-dia-de-rutina"></select>
                 </div>
-                
                 <div id="ejercicios-del-dia"></div>
-                
                 <button id="btn-guardar-registro">Guardar Registro del Día</button>
             </div>
         </section>
@@ -71,11 +66,9 @@
         
         <section id="seccion-peso" class="oculto">
             <h2>Control de Peso y Medidas</h2>
-            
             <div class="chart-container">
                 <canvas id="grafico-peso"></canvas>
             </div>
-            
             <p>Registra tus medidas para el día de hoy.</p>
             <label for="input-peso">Peso (kg):</label>
             <input type="number" id="input-peso" placeholder="Ej: 70.5">
@@ -93,11 +86,28 @@
                 <button id="btn-cerrar-detalle-medida">Cerrar</button>
             </div>
         </section>
+        
+        <section id="seccion-configuracion" class="oculto">
+            <h2>Configuración y Respaldo</h2>
+            <p>Guarda tus datos antes de limpiar el caché o cambiar de dispositivo.</p>
+            
+            <div class="config-opcion">
+                <h4>Exportar Datos</h4>
+                <p>Guarda todas tus rutinas, registros y medidas en un archivo `.json`.</p>
+                <button id="btn-exportar-datos" class="btn-config">Exportar Respaldo</button>
+            </div>
+            
+            <div class="config-opcion">
+                <h4>Importar Datos</h4>
+                <p>Carga un archivo `.json` para restaurar tus datos. (¡Advertencia: esto borrará los datos actuales!)</p>
+                <button id="btn-importar-datos" class="btn-config btn-importar">Importar Respaldo</button>
+                <input type="file" id="input-importar-archivo" class="oculto" accept=".json">
+            </div>
+        </section>
 
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script src="js/main.js" type="module"></script>
     <script>
         if ('serviceWorker' in navigator) {

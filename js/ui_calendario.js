@@ -1,4 +1,4 @@
-import { formatTime } from './utils.js'; // Importamos la función
+import { formatTime, mostrarSeccion } from './utils.js';
 
 let db;
 let fechaSeleccionadaGlobal = null;
@@ -102,8 +102,7 @@ function abrirRegistroParaDia(fecha) {
             selectDiaDeRutina.innerHTML = '<option value="">-- Selecciona un día --</option>';
         }
         // Esto lo maneja main.js, pero lo dejamos por si acaso
-        document.getElementById('seccion-registro-diario').classList.remove('oculto');
-        document.getElementById('seccion-calendario').classList.add('oculto');
+        mostrarSeccion('seccion-registro-diario');
     };
 }
 
@@ -262,8 +261,7 @@ function guardarRegistro() {
         alert('¡Entrenamiento guardado para el día ' + fechaSeleccionadaGlobal + '!');
         renderizarCalendario();
         // Esto lo maneja main.js
-        document.getElementById('seccion-calendario').classList.remove('oculto');
-        document.getElementById('seccion-registro-diario').classList.add('oculto');
+        mostrarSeccion('seccion-calendario');
     };
     putRequest.onerror = (event) => console.error('Error al guardar el registro:', event);
 }

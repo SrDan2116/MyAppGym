@@ -409,3 +409,28 @@ nav button i {
     background: var(--color-bg-secundario);
     border-radius: 8px;
 }
+/* --- Módulo Configuración --- */
+#seccion-configuracion .config-opcion {
+    background-color: var(--color-bg-secundario);
+    border: 1px solid var(--color-superficie);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+#seccion-configuracion .config-opcion h4 {
+    color: var(--color-secundario); /* Color menta */
+    font-size: 1.2em;
+}
+#seccion-configuracion .config-opcion p {
+    color: var(--color-texto-secundario);
+    margin-bottom: 15px;
+}
+.btn-config {
+    width: auto; /* No ocupa todo el ancho */
+    padding: 10px 20px;
+    background-color: var(--color-primario);
+    color: white;
+}
+.btn-config.btn-importar {
+    background-color: var(--color-error); /* Rojo peligro */
+}

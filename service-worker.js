@@ -1,5 +1,5 @@
 // CAMBIA v12 por v13
-const CACHE_NAME = 'notas-cache-v13'; 
+const CACHE_NAME = 'notas-cache-v14'; 
 
 // ¡ACTUALIZA ESTA LISTA!
 const urlsToCache = [
@@ -13,6 +13,7 @@ const urlsToCache = [
     'js/ui_rutinas.js',
     'js/ui_calendario.js',
     'js/ui_peso.js',
+    'js/ui_configuracion.js',
     
     // ¡NUEVO! Añadimos los CDNs al caché
     'https://cdn.jsdelivr.net/npm/chart.js',

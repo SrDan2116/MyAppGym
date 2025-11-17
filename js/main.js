@@ -4,12 +4,14 @@ import { mostrarSeccion } from './utils.js';
 import { initRutinas } from './ui_rutinas.js';
 import { initCalendario, renderizarCalendario } from './ui_calendario.js';
 import { initPeso } from './ui_peso.js'; // initPeso ya renderiza el gráfico 1 vez
+import { initConfiguracion } from './ui_configuracion.js';
 
 // --- Selectores de Navegación ---
 const btnNavHome = document.getElementById('btn-nav-home');
 const btnNavCalendario = document.getElementById('btn-nav-calendario');
 const btnNavRutinas = document.getElementById('btn-nav-rutinas');
 const btnNavPeso = document.getElementById('btn-nav-peso');
+const btnNavConfig = document.getElementById('btn-nav-config');
 const btnVolverCalendario = document.getElementById('btn-volver-calendario');
 
 // Encender la app cuando el HTML esté listo
@@ -22,9 +24,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         initRutinas(db);
         initCalendario(db);
         initPeso(db); // Esto ya llama a cargarListaMedidas() y renderizarGraficoPeso()
+        initConfiguracion(db);
 
         // 3. Asignar los listeners de navegación principal
         btnNavHome.addEventListener('click', () => mostrarSeccion('seccion-home'));
+        btnNavConfig.addEventListener('click', () => mostrarSeccion('seccion-configuracion'));
         btnNavCalendario.addEventListener('click', () => mostrarSeccion('seccion-calendario'));
         btnNavRutinas.addEventListener('click', () => mostrarSeccion('seccion-gestor-rutinas'));
         
