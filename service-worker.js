@@ -1,5 +1,5 @@
 // 1. CAMBIA EL NOMBRE DEL CACHÉ
-const CACHE_NAME = 'notas-cache-v4';
+const CACHE_NAME = 'notas-cache-v5';
 
 // 2. AÑADE TODOS LOS ARCHIVOS A LA LISTA
 const urlsToCache = [

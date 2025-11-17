@@ -1,24 +1,55 @@
-body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f4f4f4;
+/* --- Navegación --- */
+nav {
+    margin-bottom: 20px;
 }
-textarea {
-    width: 90%;
-    height: 100px;
-    display: block;
-    margin-bottom: 10px;
+nav button {
+    background-color: #ddd;
+    color: #333;
 }
-button {
-    padding: 10px 15px;
-    background-color: #007BFF;
-    color: white;
-    border: none;
+
+/* --- Visibilidad de Secciones --- */
+.oculto {
+    display: none;
+}
+
+/* --- Estilos del Calendario --- */
+#calendario-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    max-width: 500px;
+}
+.dia-calendario {
+    padding: 10px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    min-height: 40px;
+    text-align: center;
     cursor: pointer;
 }
-#contenedor-notas div {
-    background-color: #fff;
-    border: 1px solid #ddd;
+.dia-calendario:hover {
+    background-color: #f0f0f0;
+}
+.dia-calendario.registrado {
+    background-color: #d4edda; /* Verde para días con registro */
+}
+
+/* --- Estilos del Registro Diario --- */
+#seccion-registro-diario select,
+#seccion-registro-diario textarea {
+    display: block;
+    width: 90%;
+    margin-bottom: 15px;
+    padding: 8px;
+}
+.ejercicio-para-registrar {
+    border: 1px solid #eee;
     padding: 10px;
-    margin-top: 10px;
+    margin-bottom: 10px;
+    background: #fafafa;
+}
+.rep-input {
+    width: 50px;
+    margin-right: 5px;
+    text-align: center;
 }
