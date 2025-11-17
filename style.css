@@ -101,3 +101,16 @@ nav button {
     font-weight: bold;
     padding: 2px 8px;
 }
+
+.btn-editar-rutina {
+    background-color: #007BFF; /* Azul */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    float: right;
+    margin-left: 5px; /* Para separarlo del botón de borrar */
+    cursor: pointer;
+}
+.btn-borrar-rutina {
+    float: right; /* Asegurarnos de que ambos floten a la derecha */
+}
