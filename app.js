@@ -8,17 +8,21 @@ document.addEventListener('DOMContentLoaded', () => {
     let rutinaCompletaSeleccionada = null;
     let elapsedSeconds = 0;
     let timerInterval = null;
-    
+
     // --- Selectores del DOM ---
-    const timerDisplay = document.getElementById('timer-display');
-    const btnTimerStart = document.getElementById('btn-timer-start');
-    const btnTimerPause = document.getElementById('btn-timer-pause');
-    const btnTimerReset = document.getElementById('btn-timer-reset');
+    
+    // Navegación
+    const btnNavHome = document.getElementById('btn-nav-home');
     const btnNavCalendario = document.getElementById('btn-nav-calendario');
     const btnNavRutinas = document.getElementById('btn-nav-rutinas');
+    const btnNavPeso = document.getElementById('btn-nav-peso');
+    const seccionHome = document.getElementById('seccion-home');
     const seccionCalendario = document.getElementById('seccion-calendario');
     const seccionGestorRutinas = document.getElementById('seccion-gestor-rutinas');
+    const seccionPeso = document.getElementById('seccion-peso');
     const seccionRegistroDiario = document.getElementById('seccion-registro-diario');
+    
+    // Gestor de Rutinas (Módulo 1)
     const listaRutinas = document.getElementById('lista-rutinas');
     const txtNombreRutina = document.getElementById('txt-nombre-rutina');
     const diasTemporalesUI = document.getElementById('dias-temporales-ui');
@@ -30,54 +34,100 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardarDiaEnRutina = document.getElementById('btn-guardar-dia-en-rutina');
     const btnGuardarRutinaCompleta = document.getElementById('btn-guardar-rutina-completa');
     const btnCancelarRutina = document.getElementById('btn-cancelar-rutina');
+    
+    // Calendario (Módulo 2)
     const calendarioGrid = document.getElementById('calendario-grid');
+
+    // Registro Diario (Módulo 3)
     const tituloRegistroDia = document.getElementById('titulo-registro-dia');
     const btnVolverCalendario = document.getElementById('btn-volver-calendario');
+    const timerDisplay = document.getElementById('timer-display');
+    const btnTimerStart = document.getElementById('btn-timer-start');
+    const btnTimerPause = document.getElementById('btn-timer-pause');
+    const btnTimerReset = document.getElementById('btn-timer-reset');
     const selectRutinaDelDia = document.getElementById('select-rutina-del-dia');
     const contenedorSelectDia = document.getElementById('contenedor-select-dia');
     const selectDiaDeRutina = document.getElementById('select-dia-de-rutina');
     const ejerciciosDelDia = document.getElementById('ejercicios-del-dia');
-    const txtComentarioDia = document.getElementById('txt-comentario-dia');
     const btnGuardarRegistro = document.getElementById('btn-guardar-registro');
+    // Vistas Read-Only / Editable
+    const vistaReadonlyRegistro = document.getElementById('vista-readonly-registro');
+    const formularioEditableRegistro = document.getElementById('formulario-editable-registro');
+    const readonlyContenido = document.getElementById('readonly-contenido');
+    
+    // Peso (Módulo 4)
+    const inputPeso = document.getElementById('input-peso');
+    const inputAltura = document.getElementById('input-altura');
+    const inputCintura = document.getElementById('input-cintura');
+    const btnGuardarMedidas = document.getElementById('btn-guardar-medidas');
+    const listaMedidas = document.getElementById('lista-medidas');
+    const detalleMedida = document.getElementById('detalle-medida');
+    const detalleMedidaTitulo = document.getElementById('detalle-medida-titulo');
+    const detalleMedidaContenido = document.getElementById('detalle-medida-contenido');
+    const btnCerrarDetalleMedida = document.getElementById('btn-cerrar-detalle-medida');
 
-    // --- Inicialización de la BD (Sin cambios) ---
-    const request = indexedDB.open('GymAppDB', 2); 
+    // --- Inicialización de la BD (¡NUEVA VERSIÓN!) ---
+    // ¡Añadimos la tabla 'medidas'!
+    const request = indexedDB.open('GymAppDB', 3); // Subimos de versión
+
     request.onerror = (event) => console.error('Error al abrir IndexedDB:', event);
+
     request.onupgradeneeded = (event) => {
         db = event.target.result;
+        console.log('Actualizando la base de datos (onupgradeneeded)');
         if (!db.objectStoreNames.contains('rutinas')) {
             db.createObjectStore('rutinas', { keyPath: 'id', autoIncrement: true });
         }
         if (!db.objectStoreNames.contains('registros')) {
             db.createObjectStore('registros', { keyPath: 'fecha' });
         }
+        // ¡NUEVA TABLA!
+        if (!db.objectStoreNames.contains('medidas')) {
+            db.createObjectStore('medidas', { keyPath: 'fecha' });
+            console.log('Almacén "medidas" creado.');
+        }
     };
+
     request.onsuccess = (event) => {
         db = event.target.result;
         console.log('Base de datos GymAppDB abierta.');
+        
+        // Cargar datos en las secciones
         cargarRutinasGuardadas();
         renderizarCalendario();
-        mostrarSeccion('seccion-calendario');
+        cargarListaMedidas();
+        
+        // Vista por defecto
+        mostrarSeccion('seccion-home');
     };
 
-    // --- NAVEGACIÓN PRINCIPAL (Sin cambios) ---
+    // --- NAVEGACIÓN PRINCIPAL (¡Modificada!) ---
+    
     function mostrarSeccion(idSeccion) {
+        // Ocultar todas
+        seccionHome.classList.add('oculto');
         seccionCalendario.classList.add('oculto');
         seccionGestorRutinas.classList.add('oculto');
         seccionRegistroDiario.classList.add('oculto');
+        seccionPeso.classList.add('oculto');
+        
+        // Mostrar la seleccionada
         const seccion = document.getElementById(idSeccion);
         if (seccion) seccion.classList.remove('oculto');
     }
+
+    btnNavHome.addEventListener('click', () => mostrarSeccion('seccion-home'));
     btnNavCalendario.addEventListener('click', () => mostrarSeccion('seccion-calendario'));
     btnNavRutinas.addEventListener('click', () => mostrarSeccion('seccion-gestor-rutinas'));
+    btnNavPeso.addEventListener('click', () => mostrarSeccion('seccion-peso'));
+    
     btnVolverCalendario.addEventListener('click', () => {
         renderizarCalendario();
         mostrarSeccion('seccion-calendario');
     });
 
-    // --- MÓDULO 1: GESTOR DE RUTINAS (CAMBIOS LÓGICA ACORDEÓN) ---
-    
-    // (Funciones de creación sin cambios)
+    // --- MÓDULO 1: GESTOR DE RUTINAS (Lógica de acordeón, sin cambios) ---
+    // (Omitido por brevedad - es el mismo código de la respuesta anterior)
     btnAgregarEjercicioADia.addEventListener('click', () => {
         const nombreEjercicio = txtNombreEjercicio.value; const series = parseInt(numSeries.value);
         if (nombreEjercicio.trim() === '' || isNaN(series) || series <= 0) { alert('Ingresa nombre y series válidos.'); return; }
@@ -141,8 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
-    // ¡MODIFICADO! Cargar Rutinas Guardadas
     function cargarRutinasGuardadas() {
         listaRutinas.innerHTML = '<h4>Rutinas Existentes:</h4>';
         const transaction = db.transaction(['rutinas'], 'readonly');
@@ -150,29 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
         store.openCursor().onsuccess = (event) => {
             const cursor = event.target.result;
             if (cursor) {
-                const rutina = cursor.value;
-                const divRutina = document.createElement('div');
-                divRutina.className = 'rutina-guardada';
-
-                // 1. Cabecera (lo que se clickea)
-                const divHeader = document.createElement('div');
-                divHeader.className = 'rutina-header';
-                divHeader.innerHTML = `
-                    <span class="rutina-nombre">${rutina.nombre} (${rutina.dias.length} días)</span>
-                    <span class="rutina-acordeon-icono">&#x25BC;</span> `;
-
-                // 2. Controles (Editar/Borrar)
-                const divControles = document.createElement('div');
-                divControles.className = 'rutina-controles';
-                divControles.innerHTML = `
-                    <button class="btn-editar-rutina" data-id="${rutina.id}">Editar</button>
-                    <button class="btn-borrar-rutina" data-id="${rutina.id}">&times; Borrar</button>
-                `;
-                
-                // 3. Cuerpo (Detalles ocultos)
-                const divBody = document.createElement('div');
-                divBody.className = 'rutina-detalles oculto'; // Oculto por defecto
-                
+                const rutina = cursor.value; const divRutina = document.createElement('div'); divRutina.className = 'rutina-guardada';
+                const divHeader = document.createElement('div'); divHeader.className = 'rutina-header';
+                divHeader.innerHTML = `<span class="rutina-nombre">${rutina.nombre} (${rutina.dias.length} días)</span><span class="rutina-acordeon-icono">&#x25BC;</span>`;
+                const divControles = document.createElement('div'); divControles.className = 'rutina-controles';
+                divControles.innerHTML = `<button class="btn-editar-rutina" data-id="${rutina.id}">Editar</button><button class="btn-borrar-rutina" data-id="${rutina.id}">&times; Borrar</button>`;
+                const divBody = document.createElement('div'); divBody.className = 'rutina-detalles oculto';
                 let contenidoDetalles = '';
                 rutina.dias.forEach(dia => {
                     contenidoDetalles += `<p><strong>${dia.nombreDia}</strong></p><ul>`;
@@ -180,50 +211,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     contenidoDetalles += '</ul>';
                 });
                 divBody.innerHTML = contenidoDetalles;
-                
-                // Ensamblar
-                divRutina.appendChild(divHeader);
-                divRutina.appendChild(divControles);
-                divRutina.appendChild(divBody);
+                divRutina.appendChild(divHeader); divRutina.appendChild(divControles); divRutina.appendChild(divBody);
                 listaRutinas.appendChild(divRutina);
-                
                 cursor.continue();
             }
         };
     }
-
-    // ¡MODIFICADO! Event listener para el acordeón y botones
     listaRutinas.addEventListener('click', (event) => {
-        // Botón Borrar
         if (event.target.matches('.btn-borrar-rutina')) {
             const id = parseInt(event.target.dataset.id);
-            if (confirm('¿Estás seguro de que quieres borrar esta rutina permanentemente?')) {
-                borrarRutina(id);
-            }
+            if (confirm('¿Estás seguro de que quieres borrar esta rutina permanentemente?')) { borrarRutina(id); }
         }
-        
-        // Botón Editar
         if (event.target.matches('.btn-editar-rutina')) {
-            const id = parseInt(event.target.dataset.id);
-            cargarRutinaParaEditar(id);
+            const id = parseInt(event.target.dataset.id); cargarRutinaParaEditar(id);
         }
-        
-        // Lógica de Acordeón
         if (event.target.closest('.rutina-header')) {
             const header = event.target.closest('.rutina-header');
             const body = header.parentElement.querySelector('.rutina-detalles');
             if (body) {
                 body.classList.toggle('oculto');
-                // Cambiar ícono de flecha (opcional pero bueno)
                 const icono = header.querySelector('.rutina-acordeon-icono');
-                if (icono) {
-                    icono.innerHTML = body.classList.contains('oculto') ? '&#x25BC;' : '&#x25B2;'; // Flecha abajo / arriba
-                }
+                if (icono) { icono.innerHTML = body.classList.contains('oculto') ? '&#x25BC;' : '&#x25B2;'; }
             }
         }
     });
-
-    // (borrarRutina y cargarRutinaParaEditar no cambian)
     function borrarRutina(id) {
         const transaction = db.transaction(['rutinas'], 'readwrite'); const store = transaction.objectStore('rutinas');
         const deleteRequest = store.delete(id);
@@ -245,7 +256,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     // --- MÓDULOS 2 y 3 (CALENDARIO Y REGISTRO) ---
-    // --- (Sin cambios en esta actualización) ---
+    // --- (¡Lógica de SOLO LECTURA implementada!) ---
+
+    // (renderizarCalendario sin cambios)
     function renderizarCalendario() {
         calendarioGrid.innerHTML = '';
         const hoy = new Date(); const mes = hoy.getMonth(); const ano = hoy.getFullYear();
@@ -268,33 +281,65 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     }
+    
+    // ¡MODIFICADO!
     function abrirRegistroParaDia(fecha) {
-        tituloRegistroDia.textContent = `Registrar para el ${fecha}`;
-        resetTimer(); 
-        rutinaCompletaSeleccionada = null;
-        ejerciciosDelDia.innerHTML = '';
-        txtComentarioDia.value = '';
-        contenedorSelectDia.classList.add('oculto');
-        cargarRutinasEnSelect();
+        tituloRegistroDia.textContent = `Registro del ${fecha}`;
+        
         const transaction = db.transaction(['registros'], 'readonly');
         const store = transaction.objectStore('registros');
         const getRequest = store.get(fecha);
+
         getRequest.onsuccess = () => {
             const registro = getRequest.result;
             if (registro) {
-                txtComentarioDia.value = registro.comentario;
-                if (registro.tiempoTotal) {
-                    elapsedSeconds = registro.tiempoTotal;
-                    timerDisplay.textContent = formatTime(elapsedSeconds);
-                }
-                setTimeout(() => { precargarRegistro(registro); }, 100);
+                // ¡LÓGICA DE SOLO LECTURA!
+                // Si existe un registro, mostramos la vista de solo lectura
+                renderizarRegistroReadOnly(registro);
+                vistaReadonlyRegistro.classList.remove('oculto');
+                formularioEditableRegistro.classList.add('oculto');
             } else {
+                // LÓGICA DE CREACIÓN
+                // Si no hay registro, mostramos el formulario editable
+                vistaReadonlyRegistro.classList.add('oculto');
+                formularioEditableRegistro.classList.remove('oculto');
+                
+                // Reseteamos el formulario
+                resetTimer(); 
+                rutinaCompletaSeleccionada = null;
+                ejerciciosDelDia.innerHTML = '';
+                contenedorSelectDia.classList.add('oculto');
+                cargarRutinasEnSelect();
                 selectRutinaDelDia.value = "";
                 selectDiaDeRutina.innerHTML = '<option value="">-- Selecciona un día --</option>';
             }
+            // Mostramos la sección general de registro
+            mostrarSeccion('seccion-registro-diario');
         };
-        mostrarSeccion('seccion-registro-diario');
     }
+
+    // ¡NUEVA FUNCIÓN! Para mostrar los datos guardados
+    function renderizarRegistroReadOnly(registro) {
+        let html = `
+            <p><strong>Rutina:</strong> ${registro.rutinaNombre}</p>
+            <p><strong>Día:</strong> ${registro.diaNombre}</p>
+            <p><strong>Tiempo Total:</strong> ${formatTime(registro.tiempoTotal)}</p>
+            <h4>Ejercicios Registrados:</h4>
+        `;
+        
+        registro.ejercicios.forEach(ej => {
+            html += `<p><strong>${ej.nombre}</strong></p><ul>`;
+            ej.reps.forEach((rep, i) => {
+                html += `<li>Serie ${i + 1}: <span>${rep} reps</span></li>`;
+            });
+            html += '</ul>';
+        });
+        
+        readonlyContenido.innerHTML = html;
+    }
+
+    // (cargarRutinasEnSelect, cargarDiasDeRutina, selectRutinaDelDia, selectDiaDeRutina, mostrarEjerciciosParaRegistrar...
+    // ...no cambian, se usarán solo al crear un nuevo registro)
     function cargarRutinasEnSelect() {
         selectRutinaDelDia.innerHTML = '<option value="">-- Selecciona una rutina --</option>';
         const transaction = db.transaction(['rutinas'], 'readonly');
@@ -309,14 +354,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 cursor.continue();
             }
         };
-    }
-    function precargarRegistro(registro) {
-        selectRutinaDelDia.value = registro.rutinaId;
-        cargarDiasDeRutina(registro.rutinaId, () => {
-            selectDiaDeRutina.value = registro.diaIndex;
-            const diaSeleccionado = rutinaCompletaSeleccionada.dias[registro.diaIndex];
-            mostrarEjerciciosParaRegistrar(diaSeleccionado.ejercicios, registro.ejercicios);
-        });
     }
     selectRutinaDelDia.addEventListener('change', (event) => {
         const rutinaId = parseInt(event.target.value);
@@ -374,6 +411,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ejerciciosDelDia.appendChild(divEj);
         });
     }
+
+    // ¡MODIFICADO! Sin campo de comentarios
     btnGuardarRegistro.addEventListener('click', () => {
         if (!fechaSeleccionadaGlobal || !rutinaCompletaSeleccionada) {
             alert('Error: no hay fecha o rutina seleccionada.'); return;
@@ -395,6 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ejerciciosRegistrados[ejIndex].reps.push(repValue);
         });
         const registroFinalEjercicios = Object.values(ejerciciosRegistrados);
+        
         const registroDelDia = {
             fecha: fechaSeleccionadaGlobal,
             rutinaId: rutinaCompletaSeleccionada.id,
@@ -402,12 +442,14 @@ document.addEventListener('DOMContentLoaded', () => {
             diaIndex: diaIndex,
             diaNombre: rutinaCompletaSeleccionada.dias[diaIndex].nombreDia,
             ejercicios: registroFinalEjercicios,
-            comentario: txtComentarioDia.value,
-            tiempoTotal: elapsedSeconds 
+            tiempoTotal: elapsedSeconds
+            // ¡COMENTARIO ELIMINADO!
         };
+
         const transaction = db.transaction(['registros'], 'readwrite');
         const store = transaction.objectStore('registros');
         const putRequest = store.put(registroDelDia); 
+
         putRequest.onsuccess = () => {
             alert('¡Entrenamiento guardado para el día ' + fechaSeleccionadaGlobal + '!');
             renderizarCalendario();
@@ -442,4 +484,94 @@ document.addEventListener('DOMContentLoaded', () => {
         const seconds = totalSeconds % 60;
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
     }
+
+    // --- ¡NUEVO! LÓGICA DEL MÓDULO DE PESO ---
+    
+    // Guardar Medidas
+    btnGuardarMedidas.addEventListener('click', () => {
+        const hoy = new Date();
+        const fechaISO = `${hoy.getFullYear()}-${(hoy.getMonth() + 1).toString().padStart(2, '0')}-${hoy.getDate().toString().padStart(2, '0')}`;
+        
+        const peso = parseFloat(inputPeso.value);
+        const altura = parseFloat(inputAltura.value);
+        const cintura = parseFloat(inputCintura.value);
+
+        if (isNaN(peso) && isNaN(altura) && isNaN(cintura)) {
+            alert('Debes ingresar al menos un valor.');
+            return;
+        }
+
+        const medidasData = {
+            fecha: fechaISO,
+            peso: isNaN(peso) ? null : peso,
+            altura: isNaN(altura) ? null : altura,
+            cintura: isNaN(cintura) ? null : cintura
+        };
+        
+        // Usamos 'put' para que si guardas 2 veces en un día, se sobreescriba
+        const transaction = db.transaction(['medidas'], 'readwrite');
+        const store = transaction.objectStore('medidas');
+        const putRequest = store.put(medidasData);
+
+        putRequest.onsuccess = () => {
+            alert('¡Medidas guardadas para hoy!');
+            inputPeso.value = '';
+            inputAltura.value = '';
+            inputCintura.value = '';
+            cargarListaMedidas(); // Recargar la lista
+        };
+        putRequest.onerror = (event) => console.error('Error al guardar medidas:', event);
+    });
+    
+    // Cargar la lista de fechas
+    function cargarListaMedidas() {
+        listaMedidas.innerHTML = '';
+        const transaction = db.transaction(['medidas'], 'readonly');
+        const store = transaction.objectStore('medidas');
+        // 'prev' para mostrar el más reciente primero
+        store.openCursor(null, 'prev').onsuccess = (event) => {
+            const cursor = event.target.result;
+            if (cursor) {
+                const fecha = cursor.value.fecha;
+                const div = document.createElement('div');
+                div.className = 'registro-fecha';
+                div.textContent = `Registro del ${fecha}`;
+                div.dataset.fecha = fecha; // Guardamos la fecha para el click
+                listaMedidas.appendChild(div);
+                cursor.continue();
+            }
+        };
+    }
+    
+    // Mostrar el detalle (Modal)
+    listaMedidas.addEventListener('click', (event) => {
+        if (event.target.matches('.registro-fecha')) {
+            const fecha = event.target.dataset.fecha;
+            mostrarDetalleMedida(fecha);
+        }
+    });
+    
+    function mostrarDetalleMedida(fecha) {
+        const transaction = db.transaction(['medidas'], 'readonly');
+        const store = transaction.objectStore('medidas');
+        const getRequest = store.get(fecha);
+        
+        getRequest.onsuccess = () => {
+            const data = getRequest.result;
+            if (data) {
+                detalleMedidaTitulo.textContent = `Detalles del ${data.fecha}`;
+                detalleMedidaContenido.innerHTML = `
+                    <p><strong>Peso:</strong> ${data.peso || 'N/A'} kg</p>
+                    <p><strong>Altura:</strong> ${data.altura || 'N/A'} cm</p>
+                    <p><strong>Cintura:</strong> ${data.cintura || 'N/A'} cm</p>
+                `;
+                detalleMedida.classList.remove('oculto');
+            }
+        };
+    }
+    
+    // Cerrar el detalle (Modal)
+    btnCerrarDetalleMedida.addEventListener('click', () => {
+        detalleMedida.classList.add('oculto');
+    });
 });

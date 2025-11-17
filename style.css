@@ -300,3 +300,75 @@ legend {
     padding: 8px;
     font-size: 0.9em;
 }
+
+/* --- Sección Home --- */
+#seccion-home {
+    text-align: center;
+    padding: 40px 20px;
+}
+#seccion-home p {
+    font-size: 1.1em;
+    color: var(--color-texto-secundario);
+}
+
+/* --- Sección Peso --- */
+#lista-medidas .registro-fecha {
+    background-color: var(--color-bg-secundario);
+    border: 1px solid var(--color-superficie);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+#lista-medidas .registro-fecha:hover {
+    background-color: var(--color-superficie);
+}
+
+#detalle-medida {
+    position: fixed; /* Modal */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    background: var(--color-bg-secundario);
+    border: 1px solid var(--color-primario);
+    border-radius: 8px;
+    padding: 20px;
+    z-index: 100;
+}
+#detalle-medida-contenido p {
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+#btn-cerrar-detalle-medida {
+    background-color: var(--color-superficie);
+    color: var(--color-texto-secundario);
+    width: 100%;
+    margin-top: 10px;
+}
+
+/* --- Vista Read-Only del Calendario --- */
+#vista-readonly-registro {
+    background: var(--color-bg-secundario);
+    border: 1px solid var(--color-superficie);
+    border-radius: 8px;
+    padding: 15px;
+}
+#readonly-contenido p {
+    font-size: 1.1em;
+    color: var(--color-texto-principal);
+    margin-bottom: 10px;
+}
+#readonly-contenido span {
+    color: var(--color-texto-secundario);
+    margin-left: 10px;
+}
+#readonly-contenido ul {
+    list-style-position: inside;
+    padding-left: 15px;
+}
+#readonly-contenido li {
+    color: var(--color-texto-secundario);
+}
