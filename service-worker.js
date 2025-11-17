@@ -1,11 +1,16 @@
-const CACHE_NAME = 'notas-cache-v1';
-// Lista de archivos que queremos guardar en caché
+// 1. CAMBIA EL NOMBRE DEL CACHÉ
+const CACHE_NAME = 'notas-cache-v2'; 
+
+// 2. AÑADE TODOS LOS ARCHIVOS A LA LISTA
 const urlsToCache = [
-    '/',
+    './', // Esto es clave: representa la raíz de tu app
     'index.html',
     'style.css',
-    'app.js'
-    // AÑADE AQUÍ LOS ÍCONOS SI LOS PONES
+    'app.js',
+    'manifest.json'
+    // Si creaste los íconos, añádelos aquí también:
+    // 'images/icon-192.png',
+    // 'images/icon-512.png'
 ];
 
 // Evento 'install': Se dispara cuando el SW se instala
@@ -13,25 +18,39 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Cache abierto');
-                // Guardar todos nuestros archivos en el caché
+                console.log('Cache v2 abierto y archivos guardados');
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
-// Evento 'fetch': Se dispara cada vez que la app pide un archivo (como un .css o una imagen)
+// Evento 'fetch': Se dispara cada vez que la app pide un archivo
 self.addEventListener('fetch', event => {
     event.respondWith(
-        // Intentar buscar el archivo en el caché primero
         caches.match(event.request)
             .then(response => {
+                // Si está en caché, lo devolvemos
                 if (response) {
-                    // Si está en caché, lo devolvemos
                     return response;
                 }
                 // Si no está, vamos a la red a buscarlo
                 return fetch(event.request);
             })
+    );
+});
+
+// Evento 'activate': Limpia los cachés antiguos
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    // Si el nombre del caché no es el nuevo (v2), bórralo
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
     );
 });
