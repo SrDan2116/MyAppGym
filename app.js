@@ -5,20 +5,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let rutinaTemporal = { nombre: '', dias: [] };
     let ejerciciosTemporalesParaDia = [];
     let idRutinaEditando = null;
+    let rutinaCompletaSeleccionada = null;
     
-    // NUEVO: Variable para guardar la rutina seleccionada en el registro
-    let rutinaCompletaSeleccionada = null; 
+    // --- ¡NUEVO! Variables del Cronómetro ---
+    let elapsedSeconds = 0;
+    let timerInterval = null;
+    const timerDisplay = document.getElementById('timer-display');
+    const btnTimerStart = document.getElementById('btn-timer-start');
+    const btnTimerPause = document.getElementById('btn-timer-pause');
+    const btnTimerReset = document.getElementById('btn-timer-reset');
 
-    // --- Selectores del DOM ---
-    
-    // Navegación
+    // --- Selectores del DOM (El resto) ---
     const btnNavCalendario = document.getElementById('btn-nav-calendario');
     const btnNavRutinas = document.getElementById('btn-nav-rutinas');
     const seccionCalendario = document.getElementById('seccion-calendario');
     const seccionGestorRutinas = document.getElementById('seccion-gestor-rutinas');
     const seccionRegistroDiario = document.getElementById('seccion-registro-diario');
-    
-    // Gestor de Rutinas (Módulo 1)
     const listaRutinas = document.getElementById('lista-rutinas');
     const txtNombreRutina = document.getElementById('txt-nombre-rutina');
     const diasTemporalesUI = document.getElementById('dias-temporales-ui');
@@ -30,15 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnGuardarDiaEnRutina = document.getElementById('btn-guardar-dia-en-rutina');
     const btnGuardarRutinaCompleta = document.getElementById('btn-guardar-rutina-completa');
     const btnCancelarRutina = document.getElementById('btn-cancelar-rutina');
-    
-    // Calendario (Módulo 2)
     const calendarioGrid = document.getElementById('calendario-grid');
-
-    // Registro Diario (Módulo 3)
     const tituloRegistroDia = document.getElementById('titulo-registro-dia');
     const btnVolverCalendario = document.getElementById('btn-volver-calendario');
     const selectRutinaDelDia = document.getElementById('select-rutina-del-dia');
-    // ¡NUEVOS SELECTORES!
     const contenedorSelectDia = document.getElementById('contenedor-select-dia');
     const selectDiaDeRutina = document.getElementById('select-dia-de-rutina');
     const ejerciciosDelDia = document.getElementById('ejercicios-del-dia');
@@ -77,10 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btnNavCalendario.addEventListener('click', () => mostrarSeccion('seccion-calendario'));
     btnNavRutinas.addEventListener('click', () => mostrarSeccion('seccion-gestor-rutinas'));
     btnVolverCalendario.addEventListener('click', () => {
-        renderizarCalendario(); // Recargar calendario por si algo cambió
+        renderizarCalendario();
         mostrarSeccion('seccion-calendario');
     });
-
 
     // --- MÓDULO 1: GESTOR DE RUTINAS (Sin cambios) ---
     // (Omitido por brevedad - es el mismo código de la respuesta anterior)
@@ -194,10 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     
     // --- MÓDULOS 2 y 3 (CALENDARIO Y REGISTRO) ---
-    // --- ¡AQUÍ ESTÁ TODA LA LÓGICA NUEVA! ---
+    // --- (Pequeños cambios para el cronómetro) ---
 
-    // MÓDULO 2: CALENDARIO (Sin cambios)
-    function renderizarCalendario() {
+    function renderizarCalendario() { // (Sin cambios)
         calendarioGrid.innerHTML = '';
         const hoy = new Date(); const mes = hoy.getMonth(); const ano = hoy.getFullYear();
         const diasEnMes = new Date(ano, mes + 1, 0).getDate();
@@ -220,21 +215,20 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
     
-    // MÓDULO 3: REGISTRO DIARIO (¡GRANDES CAMBIOS!)
-
+    // ¡MODIFICADO!
     function abrirRegistroParaDia(fecha) {
         tituloRegistroDia.textContent = `Registrar para el ${fecha}`;
         
-        // Resetear la vista de registro
+        // ¡NUEVO! Resetea el cronómetro cada vez que abres
+        resetTimer(); 
+        
         rutinaCompletaSeleccionada = null;
         ejerciciosDelDia.innerHTML = '';
         txtComentarioDia.value = '';
-        contenedorSelectDia.classList.add('oculto'); // Ocultar selector de día
+        contenedorSelectDia.classList.add('oculto');
         
-        // Cargar las rutinas en el primer <select>
         cargarRutinasEnSelect();
         
-        // ¡NUEVO! Comprobar si ya existe un registro para este día
         const transaction = db.transaction(['registros'], 'readonly');
         const store = transaction.objectStore('registros');
         const getRequest = store.get(fecha);
@@ -244,13 +238,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (registro) {
                 // Si existe, precargamos los datos
                 txtComentarioDia.value = registro.comentario;
-                // Usamos un 'setTimeout' para asegurar que los <select> se llenen
-                // antes de intentar seleccionar los valores guardados.
+
+                // ¡NUEVO! Cargar el tiempo guardado
+                if (registro.tiempoTotal) {
+                    elapsedSeconds = registro.tiempoTotal;
+                    timerDisplay.textContent = formatTime(elapsedSeconds);
+                }
+
                 setTimeout(() => {
                     precargarRegistro(registro);
-                }, 100); // 100ms es usualmente suficiente
+                }, 100);
             } else {
-                // Si no existe, dejamos los <select> listos para elegir
                 selectRutinaDelDia.value = "";
                 selectDiaDeRutina.innerHTML = '<option value="">-- Selecciona un día --</option>';
             }
@@ -259,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarSeccion('seccion-registro-diario');
     }
 
-    // Carga las rutinas en el primer <select>
+    // (Sin cambios)
     function cargarRutinasEnSelect() {
         selectRutinaDelDia.innerHTML = '<option value="">-- Selecciona una rutina --</option>';
         const transaction = db.transaction(['rutinas'], 'readonly');
@@ -276,24 +274,17 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // ¡NUEVA FUNCIÓN! Para precargar datos si el día ya fue registrado
+    // (Sin cambios)
     function precargarRegistro(registro) {
-        // 1. Seleccionar la rutina
         selectRutinaDelDia.value = registro.rutinaId;
-        
-        // 2. Simular el 'change' para cargar los días de esa rutina
-        // y luego seleccionar el día guardado
         cargarDiasDeRutina(registro.rutinaId, () => {
-            selectDiaDeRutina.value = registro.diaIndex; // Seleccionar el día guardado
-            
-            // 3. Simular el 'change' del día para mostrar los ejercicios
-            // y luego rellenar las repeticiones
+            selectDiaDeRutina.value = registro.diaIndex;
             const diaSeleccionado = rutinaCompletaSeleccionada.dias[registro.diaIndex];
             mostrarEjerciciosParaRegistrar(diaSeleccionado.ejercicios, registro.ejercicios);
         });
     }
 
-    // Evento para el PRIMER <select> (Rutinas)
+    // (Sin cambios)
     selectRutinaDelDia.addEventListener('change', (event) => {
         const rutinaId = parseInt(event.target.value);
         if (isNaN(rutinaId) || !rutinaId) {
@@ -305,107 +296,82 @@ document.addEventListener('DOMContentLoaded', () => {
         cargarDiasDeRutina(rutinaId);
     });
     
-    // ¡NUEVA FUNCIÓN! Carga los días en el SEGUNDO <select>
+    // (Sin cambios)
     function cargarDiasDeRutina(rutinaId, callback) {
         const transaction = db.transaction(['rutinas'], 'readonly');
         const store = transaction.objectStore('rutinas');
         const getRequest = store.get(rutinaId);
-
         getRequest.onsuccess = () => {
             rutinaCompletaSeleccionada = getRequest.result;
             if (rutinaCompletaSeleccionada) {
-                // Rellenar el <select> de días
                 selectDiaDeRutina.innerHTML = '<option value="">-- Selecciona un día --</option>';
                 rutinaCompletaSeleccionada.dias.forEach((dia, index) => {
                     const option = document.createElement('option');
-                    option.value = index; // Usamos el índice del array como valor
-                    option.textContent = dia.nombreDia;
+                    option.value = index; option.textContent = dia.nombreDia;
                     selectDiaDeRutina.appendChild(option);
                 });
-                // Mostrar el segundo <select>
                 contenedorSelectDia.classList.remove('oculto');
-                
-                // Si hay un callback (al precargar), ejecutarlo
                 if (callback) callback();
             }
         };
     }
 
-    // Evento para el SEGUNDO <select> (Días)
+    // (Sin cambios)
     selectDiaDeRutina.addEventListener('change', (event) => {
         const diaIndex = parseInt(event.target.value);
         if (isNaN(diaIndex) || !rutinaCompletaSeleccionada) {
-            ejerciciosDelDia.innerHTML = '';
-            return;
+            ejerciciosDelDia.innerHTML = ''; return;
         }
-        
         const diaSeleccionado = rutinaCompletaSeleccionada.dias[diaIndex];
         mostrarEjerciciosParaRegistrar(diaSeleccionado.ejercicios);
     });
 
-    // Muestra los campos para anotar repeticiones (¡MODIFICADA!)
-    // Ahora acepta un segundo parámetro opcional: los datos guardados
+    // (Sin cambios)
     function mostrarEjerciciosParaRegistrar(ejercicios, datosGuardados = []) {
         ejerciciosDelDia.innerHTML = '';
         ejercicios.forEach((ej, index) => {
             const divEj = document.createElement('div');
             divEj.className = 'ejercicio-para-registrar';
             divEj.innerHTML = `<strong>${ej.nombre} (${ej.series} series)</strong>`;
-            
-            // Buscar si hay datos guardados para este ejercicio
             const datosEj = datosGuardados.find(d => d.nombre === ej.nombre);
-
             for (let i = 1; i <= ej.series; i++) {
-                const label = document.createElement('label');
-                label.textContent = ` Serie ${i}: `;
+                const label = document.createElement('label'); label.textContent = ` Serie ${i}: `;
                 const input = document.createElement('input');
-                input.type = 'number';
-                input.placeholder = 'Reps';
-                input.className = 'rep-input';
-                input.dataset.ejercicioIndex = index;
-                input.dataset.serieIndex = i - 1;
-                
-                // ¡NUEVO! Rellenar si hay datos
+                input.type = 'number'; input.placeholder = 'Reps'; input.className = 'rep-input';
+                input.dataset.ejercicioIndex = index; input.dataset.serieIndex = i - 1;
                 if (datosEj && datosEj.reps[i - 1] !== undefined) {
                     input.value = datosEj.reps[i - 1];
                 }
-                
-                divEj.appendChild(label);
-                divEj.appendChild(input);
+                divEj.appendChild(label); divEj.appendChild(input);
             }
             ejerciciosDelDia.appendChild(divEj);
         });
     }
 
-    // Botón final para guardar (¡MODIFICADO!)
+    // ¡MODIFICADO!
     btnGuardarRegistro.addEventListener('click', () => {
         if (!fechaSeleccionadaGlobal || !rutinaCompletaSeleccionada) {
-            alert('Error: no hay fecha o rutina seleccionada.');
-            return;
+            alert('Error: no hay fecha o rutina seleccionada.'); return;
         }
-        
         const diaIndex = parseInt(selectDiaDeRutina.value);
         if (isNaN(diaIndex)) {
-            alert('Por favor, selecciona un día de la rutina.');
-            return;
+            alert('Por favor, selecciona un día de la rutina.'); return;
         }
+        
+        // ¡NUEVO! Detenemos el timer al guardar
+        pauseTimer(); 
 
-        // Recolectar datos de las repeticiones
         const inputsReps = document.querySelectorAll('.rep-input');
         const ejerciciosRegistrados = {};
-
         inputsReps.forEach(input => {
             const ejIndex = input.dataset.ejercicioIndex;
             const repValue = input.value ? parseInt(input.value) : 0;
-            
             if (!ejerciciosRegistrados[ejIndex]) {
-                // Obtener el nombre del ejercicio de la rutina base
                 const nombre = rutinaCompletaSeleccionada.dias[diaIndex].ejercicios[ejIndex].nombre;
                 ejerciciosRegistrados[ejIndex] = { nombre: nombre, reps: [] };
             }
             ejerciciosRegistrados[ejIndex].reps.push(repValue);
         });
-
         const registroFinalEjercicios = Object.values(ejerciciosRegistrados);
 
         // Crear el objeto de registro completo
@@ -413,23 +379,56 @@ document.addEventListener('DOMContentLoaded', () => {
             fecha: fechaSeleccionadaGlobal,
             rutinaId: rutinaCompletaSeleccionada.id,
             rutinaNombre: rutinaCompletaSeleccionada.nombre,
-            diaIndex: diaIndex, // Guardamos el índice del día
+            diaIndex: diaIndex,
             diaNombre: rutinaCompletaSeleccionada.dias[diaIndex].nombreDia,
             ejercicios: registroFinalEjercicios,
-            comentario: txtComentarioDia.value
+            comentario: txtComentarioDia.value,
+            // ¡NUEVO! Guardamos el tiempo total
+            tiempoTotal: elapsedSeconds 
         };
 
-        // Guardar en la BD (usamos 'put' para crear o sobreescribir)
         const transaction = db.transaction(['registros'], 'readwrite');
         const store = transaction.objectStore('registros');
         const putRequest = store.put(registroDelDia); 
 
         putRequest.onsuccess = () => {
             alert('¡Entrenamiento guardado para el día ' + fechaSeleccionadaGlobal + '!');
-            renderizarCalendario(); // Recargar calendario para mostrar el día en verde
-            mostrarSeccion('seccion-calendario'); // Volver al calendario
+            renderizarCalendario();
+            mostrarSeccion('seccion-calendario');
         };
-
         putRequest.onerror = (event) => console.error('Error al guardar el registro:', event);
     });
+
+    // --- ¡NUEVO! LÓGICA DEL CRONÓMETRO ---
+
+    btnTimerStart.addEventListener('click', startTimer);
+    btnTimerPause.addEventListener('click', pauseTimer);
+    btnTimerReset.addEventListener('click', resetTimer);
+
+    function startTimer() {
+        if (timerInterval) return; // Ya está corriendo
+        timerInterval = setInterval(() => {
+            elapsedSeconds++;
+            timerDisplay.textContent = formatTime(elapsedSeconds);
+        }, 1000);
+    }
+
+    function pauseTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    function resetTimer() {
+        pauseTimer();
+        elapsedSeconds = 0;
+        timerDisplay.textContent = "00:00:00";
+    }
+
+    function formatTime(totalSeconds) {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        // padStart(2, '0') asegura que siempre haya dos dígitos (ej: '05' en vez de '5')
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
 });

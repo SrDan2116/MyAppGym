@@ -114,3 +114,35 @@ nav button {
 .btn-borrar-rutina {
     float: right; /* Asegurarnos de que ambos floten a la derecha */
 }
+
+/* --- Cronómetro --- */
+.cronometro-container {
+    text-align: center;
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px dashed #007BFF;
+    background: #f9f9f9;
+    border-radius: 8px;
+}
+#timer-display {
+    font-size: 2.8em; /* ¡Grande! */
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 15px;
+}
+.cronometro-container button {
+    margin: 0 5px;
+    padding: 8px 12px;
+}
+#btn-timer-start {
+    background-color: #28a745; /* Verde */
+    color: white;
+}
+#btn-timer-pause {
+    background-color: #ffc107; /* Amarillo */
+    color: black;
+}
+#btn-timer-reset {
+    background-color: #dc3545; /* Rojo */
+    color: white;
+}
