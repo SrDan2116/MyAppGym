@@ -201,7 +201,6 @@ async function calcularConIA() {
     `;
 
     try {
-        // --- USAMOS EL ALIAS 'gemini-flash-latest' QUE APARECE EN TU LISTA ---
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {

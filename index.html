@@ -21,6 +21,7 @@
             <button id="btn-nav-config"><i class="bi bi-gear-fill"></i> Config</button>
         </nav>
     </header>
+
     <main>
         <section id="seccion-home">
             <h2>Bienvenido</h2>
@@ -39,10 +40,12 @@
         <section id="seccion-registro-diario" class="oculto">
             <h2 id="titulo-registro-dia">Registrar...</h2>
             <button id="btn-volver-calendario">Volver al Calendario</button>
+            
             <div id="vista-readonly-registro" class="oculto">
                 <h3>Registro Guardado (Solo Lectura)</h3>
                 <div id="readonly-contenido"></div>
             </div>
+
             <div id="formulario-editable-registro">
                 <div class="cronometro-container">
                     <h3>Tiempo de Sesión</h3>
@@ -54,10 +57,12 @@
                 <hr>
                 <label for="select-rutina-del-dia">1. Selecciona la Rutina:</label>
                 <select id="select-rutina-del-dia"></select>
+                
                 <div id="contenedor-select-dia" class="oculto">
                     <label for="select-dia-de-rutina">2. Selecciona el Día:</label>
                     <select id="select-dia-de-rutina"></select>
                 </div>
+                
                 <div id="ejercicios-del-dia"></div>
                 <button id="btn-guardar-registro">Guardar Registro del Día</button>
             </div>
@@ -69,14 +74,17 @@
             <hr>
             <h3>Crear/Modificar Nueva Rutina</h3>
             <input type="text" id="txt-nombre-rutina" placeholder="Nombre (Ej: PPL 6 Días)">
+            
             <div id="dias-en-creacion-container">
                 <h4>Días de esta rutina:</h4>
                 <div id="dias-temporales-ui"></div>
             </div>
+
             <fieldset class="form-agregar-dia">
                 <legend>Añadir Día a la Rutina</legend>
                 <input type="text" id="txt-nombre-dia" placeholder="Nombre del Día (Ej: Día 1 - Push)">
                 <div id="ejercicios-temporales-para-dia-ui"></div>
+                
                 <div class="form-agregar-ejercicio">
                     <input type="text" id="txt-nombre-ejercicio" placeholder="Nombre del ejercicio">
                     <input type="text" id="txt-rango-reps" placeholder="Meta (Ej: 8-12)" style="width: 120px;"> 
@@ -85,6 +93,7 @@
                 </div>
                 <button type="button" id="btn-guardar-dia-en-rutina">Guardar este Día</button>
             </fieldset>
+
             <button id="btn-guardar-rutina-completa">Guardar Rutina Completa</button>
             <button type="button" id="btn-cancelar-rutina">Cancelar/Limpiar</button>
         </section>
@@ -105,6 +114,7 @@
             <hr>
             <h3>Registros Guardados</h3>
             <div id="lista-medidas"></div>
+            
             <div id="detalle-medida" class="oculto">
                 <h4 id="detalle-medida-titulo"></h4>
                 <div id="detalle-medida-contenido"></div>
@@ -118,6 +128,7 @@
                 <label for="fecha-dieta">Viendo registro del:</label>
                 <input type="date" id="fecha-dieta" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
             </div>
+
             <div class="resumen-dia-card">
                 <h3>Totales del Día</h3>
                 <div class="macros-grid">
@@ -127,6 +138,7 @@
                     <div class="macro-card">🥑 <span id="total-grasas">0</span>g</div>
                 </div>
             </div>
+
             <div id="contenedor-comidas"></div>
             <button id="btn-agregar-snack" style="background-color: var(--color-secundario); color: black; margin-top: 10px;">+ Agregar Snack</button>
             <button id="btn-guardar-dia-dieta" style="margin-top: 20px;">Guardar Día Completo</button>
@@ -135,8 +147,10 @@
                 <div class="modal-content">
                     <h3 id="modal-titulo-comida">Editar Comida</h3>
                     <textarea id="modal-txt-descripcion" placeholder="Ej: 2 huevos y pan integral..."></textarea>
+                    
                     <button id="modal-btn-calcular" style="background-color: #6f42c1; color: white;">✨ Calcular Macros (IA)</button>
                     <p id="modal-estado-ia" style="font-size: 0.8em; color: gray;"></p>
+                    
                     <div id="modal-resultado-macros" class="oculto">
                         <div class="macros-grid-mini">
                             <input type="number" id="modal-cal" placeholder="Kcal">
@@ -145,6 +159,7 @@
                             <input type="number" id="modal-gras" placeholder="Gras">
                         </div>
                     </div>
+                    
                     <div class="modal-acciones">
                         <button id="modal-btn-confirmar">Confirmar</button>
                         <button id="modal-btn-cancelar" style="background-color: var(--color-error);">Cancelar</button>
@@ -177,7 +192,6 @@
                 <input type="file" id="input-importar-archivo" class="oculto" accept=".json">
             </div>
         </section>
-
     </main>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

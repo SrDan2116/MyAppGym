@@ -539,6 +539,8 @@ legend {
 }
 
 /* --- Ventana Modal (Pop-up de Edición) --- */
+/* CORRECCIÓN: Usamos !important en la clase .oculto para asegurar que se cierre */
+
 .modal-overlay {
     position: fixed;
     top: 0; 
@@ -546,10 +548,15 @@ legend {
     width: 100%; 
     height: 100%;
     background-color: rgba(0, 0, 0, 0.85); /* Fondo oscuro semitransparente */
-    display: flex;
+    display: flex; /* Para centrar el contenido */
     justify-content: center;
     align-items: center;
     z-index: 1000;
+}
+
+/* ESTA ES LA REGLA QUE ARREGLA EL PROBLEMA DE CERRAR */
+.modal-overlay.oculto {
+    display: none !important;
 }
 
 .modal-content {
