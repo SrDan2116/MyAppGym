@@ -1,4 +1,4 @@
-const CACHE_NAME = 'notas-cache-v36'; 
+const CACHE_NAME = 'notas-cache-v37'; 
 
 const urlsToCache = [
     './',
@@ -23,7 +23,7 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Cache v36 abierto');
+                console.log('Cache v37 abierto');
                 return cache.addAll(urlsToCache);
             })
     );

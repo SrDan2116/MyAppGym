@@ -201,9 +201,8 @@ async function calcularConIA() {
     `;
 
     try {
-        // --- AQUÍ ESTÁ EL CAMBIO CLAVE: gemini-2.0-flash-lite ---
-        // Este modelo aparece en tu lista y es ideal para evitar bloqueos
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
+        // --- USAMOS EL ALIAS 'gemini-flash-latest' QUE APARECE EN TU LISTA ---
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -214,8 +213,8 @@ async function calcularConIA() {
         });
 
         if (!response.ok) {
-            if (response.status === 404) throw new Error("Modelo no encontrado (Asegúrate de no usar v1.5).");
-            if (response.status === 429) throw new Error("Cuota del día excedida. Intenta mañana o crea otro proyecto.");
+            if (response.status === 404) throw new Error("Modelo no encontrado.");
+            if (response.status === 429) throw new Error("Cuota agotada. Verifica que la Key en Configuración sea la NUEVA.");
             throw new Error(`Error API: ${response.status}`);
         }
 
