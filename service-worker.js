@@ -1,4 +1,3 @@
-// CAMBIA v27 por v28
 const CACHE_NAME = 'notas-cache-v29'; 
 
 const urlsToCache = [
@@ -24,7 +23,7 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Cache v28 abierto');
+                console.log('Cache v29 abierto');
                 return cache.addAll(urlsToCache);
             })
     );
