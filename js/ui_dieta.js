@@ -201,8 +201,8 @@ async function calcularConIA() {
     `;
 
     try {
-        // --- USAMOS EL MODELO 2.0-FLASH QUE TU CUENTA SÍ RECONOCE ---
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        // --- USAMOS EL MODELO "LITE" (8b) QUE ES MÁS AMIGABLE CON EL PLAN GRATUITO ---
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-8b:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -213,8 +213,8 @@ async function calcularConIA() {
         });
 
         if (!response.ok) {
-            if (response.status === 404) throw new Error("Modelo no encontrado (Intenta con gemini-2.0-flash-exp).");
-            if (response.status === 429) throw new Error("Cuota excedida. ¡NECESITAS UN PROYECTO NUEVO EN GOOGLE!");
+            if (response.status === 404) throw new Error("Modelo no disponible. Revisa tu proyecto en Google AI Studio.");
+            if (response.status === 429) throw new Error("Plan Gratuito saturado. Espera un minuto e intenta de nuevo.");
             throw new Error(`Error API: ${response.status}`);
         }
 
@@ -237,8 +237,7 @@ async function calcularConIA() {
 
     } catch (error) {
         console.error(error);
-        modalEstadoIA.textContent = "Error: " + error.message;
-        alert("Hubo un problema: " + error.message);
+        modalEstadoIA.textContent = error.message; 
     } finally {
         modalBtnCalcular.disabled = false;
     }
