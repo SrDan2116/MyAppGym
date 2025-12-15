@@ -1,5 +1,5 @@
-// CAMBIA v25 por v26
-const CACHE_NAME = 'notas-cache-v26'; 
+// CAMBIA v26 por v27
+const CACHE_NAME = 'notas-cache-v27'; 
 
 const urlsToCache = [
     './',
@@ -7,13 +7,13 @@ const urlsToCache = [
     'style.css',
     'manifest.json',
     'js/main.js',
-    'js/db.js', 
+    'js/db.js',
     'js/utils.js',
     'js/ui_rutinas.js',
     'js/ui_calendario.js',
     'js/ui_peso.js',
     'js/ui_configuracion.js',
-    'js/ui_dieta.js', 
+    'js/ui_dieta.js', // Este archivo se actualizará gracias a la v27
     'https://cdn.jsdelivr.net/npm/chart.js',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
     'images/icon-192.png',
@@ -24,13 +24,13 @@ self.addEventListener('install', event => {
     event.waitUntil(
         caches.open(CACHE_NAME)
             .then(cache => {
-                console.log('Cache v26 abierto');
+                console.log('Cache v27 abierto');
                 return cache.addAll(urlsToCache);
             })
     );
 });
 
-// El resto del archivo queda igual...
+// (Resto del archivo igual...)
 self.addEventListener('fetch', event => {
     const requestUrl = new URL(event.request.url);
     if (requestUrl.origin === 'https://cdn.jsdelivr.net') {

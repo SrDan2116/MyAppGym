@@ -1,6 +1,6 @@
 let db;
 
-// Estructura de datos en memoria para el día actual
+// Estructura de datos
 let comidasDelDia = []; 
 let fechaSeleccionada = '';
 
@@ -35,12 +35,10 @@ let indiceEditando = null;
 export function initDieta(database) {
     db = database;
 
-    // Inicializar fecha a hoy
     const hoy = new Date();
     fechaSeleccionada = `${hoy.getFullYear()}-${(hoy.getMonth() + 1).toString().padStart(2, '0')}-${hoy.getDate().toString().padStart(2, '0')}`;
     inputFecha.value = fechaSeleccionada;
 
-    // Listeners
     inputFecha.addEventListener('change', (e) => {
         fechaSeleccionada = e.target.value;
         cargarDietaDelDia();
@@ -59,9 +57,7 @@ export function initDieta(database) {
 // --- Gestión de Datos ---
 
 function cargarDietaDelDia() {
-    // ID SIMPLE: Solo la fecha
     const idDia = fechaSeleccionada;
-    
     const transaction = db.transaction(['dietas'], 'readonly');
     const store = transaction.objectStore('dietas');
     const getRequest = store.get(idDia);
@@ -197,22 +193,16 @@ async function calcularConIA() {
     modalEstadoIA.textContent = "Calculando...";
     modalBtnCalcular.disabled = true;
 
-    // EL PROMPT: Le pedimos estrictamente JSON
+    // Prompt estricto para JSON
     const prompt = `
-        Actúa como un nutricionista. Analiza la siguiente comida: "${texto}".
-        Calcula los macronutrientes aproximados.
-        IMPORTANTE: Responde ÚNICAMENTE con este formato JSON (sin texto extra, ni markdown):
-        {
-            "calorias": 0,
-            "proteinas": 0,
-            "carbohidratos": 0,
-            "grasas": 0
-        }
-        Reemplaza los 0 con los números enteros estimados.
+        Analiza nutricionalmente: "${texto}".
+        Calcula calorias, proteinas, carbohidratos, grasas.
+        Responde SOLO JSON válido:
+        { "calorias": 0, "proteinas": 0, "carbohidratos": 0, "grasas": 0 }
     `;
 
     try {
-        // CAMBIO IMPORTANTE: Usamos el modelo 'gemini-1.5-flash'
+        // --- AQUÍ ESTÁ EL CAMBIO CLAVE: gemini-1.5-flash ---
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
@@ -223,20 +213,12 @@ async function calcularConIA() {
             })
         });
 
-        if (!response.ok) {
-            throw new Error(`Error API: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`Error API: ${response.status}`);
 
         const data = await response.json();
-        
-        // Verificamos que la estructura sea correcta antes de leer
-        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-            throw new Error("La IA no devolvió una respuesta válida.");
-        }
-
         let textoRespuesta = data.candidates[0].content.parts[0].text;
         
-        // Limpieza: A veces la IA responde con ```json ... ```, hay que quitarlo
+        // Limpiamos el JSON por si acaso
         textoRespuesta = textoRespuesta.replace(/```json/g, '').replace(/```/g, '').trim();
 
         const macros = JSON.parse(textoRespuesta);
@@ -249,8 +231,8 @@ async function calcularConIA() {
 
     } catch (error) {
         console.error(error);
-        modalEstadoIA.textContent = "Error: Verifica tu API Key o conexión.";
-        alert("Hubo un problema: " + error.message);
+        modalEstadoIA.textContent = "Error. Revisa tu Key o Internet.";
+        alert("Error: " + error.message);
     } finally {
         modalBtnCalcular.disabled = false;
     }
