@@ -4,131 +4,111 @@ let db;
 const btnExportar = document.getElementById('btn-exportar-datos');
 const btnImportar = document.getElementById('btn-importar-datos');
 const inputImportar = document.getElementById('input-importar-archivo');
+const inputApiKey = document.getElementById('input-api-key');
+const btnGuardarApiKey = document.getElementById('btn-guardar-api-key');
 
 export function initConfiguracion(database) {
     db = database;
 
-    // Listeners
+    // Cargar API Key si existe al iniciar
+    const savedKey = localStorage.getItem('gym_gemini_api_key');
+    if (savedKey) {
+        inputApiKey.value = savedKey;
+        console.log("API Key cargada desde memoria.");
+    }
+
+    // Listener para GUARDAR KEY
+    if(btnGuardarApiKey) {
+        btnGuardarApiKey.addEventListener('click', () => {
+            const key = inputApiKey.value.trim();
+            if (key) {
+                localStorage.setItem('gym_gemini_api_key', key);
+                alert('¡ÉXITO! API Key guardada en este celular.');
+            } else {
+                alert('Error: La casilla está vacía. Pega tu API Key primero.');
+            }
+        });
+    } else {
+        console.error("Error: No se encontró el botón btn-guardar-api-key en el HTML");
+    }
+
+    // Listeners de Exportar/Importar
     btnExportar.addEventListener('click', exportarDatos);
-    btnImportar.addEventListener('click', () => {
-        // Simular clic en el input de archivo oculto
-        inputImportar.click(); 
-    });
+    btnImportar.addEventListener('click', () => inputImportar.click());
     inputImportar.addEventListener('change', importarDatos);
 }
 
-// --- Funciones del Módulo ---
+// --- Funciones del Módulo (Exportar/Importar) ---
 
 async function exportarDatos() {
     try {
-        console.log("Iniciando exportación...");
+        const transaction = db.transaction(['rutinas', 'registros', 'medidas', 'dietas'], 'readonly');
         
-        // 1. Iniciar transacción y obtener almacenes
-        const transaction = db.transaction(['rutinas', 'registros', 'medidas'], 'readonly');
-        const storeRutinas = transaction.objectStore('rutinas');
-        const storeRegistros = transaction.objectStore('registros');
-        const storeMedidas = transaction.objectStore('medidas');
-        
-        // 2. Leer datos de todos los almacenes
-        const rutinas = await storeRequest(storeRutinas.getAll());
-        const registros = await storeRequest(storeRegistros.getAll());
-        const medidas = await storeRequest(storeMedidas.getAll());
+        const rutinas = await storeRequest(transaction.objectStore('rutinas').getAll());
+        const registros = await storeRequest(transaction.objectStore('registros').getAll());
+        const medidas = await storeRequest(transaction.objectStore('medidas').getAll());
+        const dietas = await storeRequest(transaction.objectStore('dietas').getAll());
 
-        // 3. Crear el objeto de respaldo
         const respaldo = {
-            version: 4, // Versión de tu BD
+            version: 6,
             fecha: new Date().toISOString(),
-            data: {
-                rutinas: rutinas,
-                registros: registros,
-                medidas: medidas
-            }
+            data: { rutinas, registros, medidas, dietas }
         };
 
-        // 4. Convertir a JSON
         const jsonString = JSON.stringify(respaldo, null, 2);
-
-        // 5. Crear un Blob (archivo en memoria)
         const blob = new Blob([jsonString], { type: 'application/json' });
-
-        // 6. Crear un link temporal y simular clic para descargar
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `gym_app_respaldo_${new Date().toISOString().split('T')[0]}.json`;
         document.body.appendChild(a);
         a.click();
-        
-        // 7. Limpiar
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
         alert('¡Respaldo exportado exitosamente!');
-        
     } catch (error) {
-        console.error('Error al exportar datos:', error);
+        console.error('Error al exportar:', error);
         alert('Error al exportar los datos.');
     }
 }
 
 function importarDatos(event) {
     const file = event.target.files[0];
-    if (!file) {
-        return; // No se seleccionó archivo
-    }
+    if (!file) return;
 
-    if (!confirm('¿Estás seguro? Importar un respaldo borrará TODOS los datos actuales.')) {
-        inputImportar.value = null; // Limpiar el input
-        return;
+    if (!confirm('Importar borrará TODOS los datos actuales. ¿Seguro?')) {
+        inputImportar.value = null; return;
     }
 
     const reader = new FileReader();
-
     reader.onload = async (e) => {
         try {
             const json = e.target.result;
             const respaldo = JSON.parse(json);
 
-            if (!respaldo.data || !respaldo.data.rutinas) {
-                throw new Error('Archivo de respaldo no válido.');
-            }
-
-            // ¡Iniciamos la escritura!
-            const transaction = db.transaction(['rutinas', 'registros', 'medidas'], 'readwrite');
+            const transaction = db.transaction(['rutinas', 'registros', 'medidas', 'dietas'], 'readwrite');
             
-            // 1. Borrar datos antiguos
             await storeRequest(transaction.objectStore('rutinas').clear());
             await storeRequest(transaction.objectStore('registros').clear());
             await storeRequest(transaction.objectStore('medidas').clear());
-            
-            console.log('Datos antiguos borrados.');
+            await storeRequest(transaction.objectStore('dietas').clear());
 
-            // 2. Importar datos nuevos
-            for (const rutina of respaldo.data.rutinas) {
-                await storeRequest(transaction.objectStore('rutinas').add(rutina));
-            }
-            for (const registro of respaldo.data.registros) {
-                await storeRequest(transaction.objectStore('registros').add(registro));
-            }
-            for (const medida of respaldo.data.medidas) {
-                await storeRequest(transaction.objectStore('medidas').add(medida));
-            }
+            for (const r of respaldo.data.rutinas || []) await storeRequest(transaction.objectStore('rutinas').add(r));
+            for (const r of respaldo.data.registros || []) await storeRequest(transaction.objectStore('registros').add(r));
+            for (const r of respaldo.data.medidas || []) await storeRequest(transaction.objectStore('medidas').add(r));
+            for (const r of respaldo.data.dietas || []) await storeRequest(transaction.objectStore('dietas').add(r));
             
-            alert('¡Importación completada! La aplicación se recargará para mostrar los cambios.');
-            
-            // Recargar la página para que la app lea los nuevos datos
+            alert('¡Importación completada! Recargando...');
             location.reload(); 
-
         } catch (error) {
-            console.error('Error al importar datos:', error);
-            alert('Error al importar el archivo. ¿Estás seguro de que es un respaldo válido?');
+            console.error('Error importar:', error);
+            alert('Error al importar el archivo.');
         }
     };
-
     reader.readAsText(file);
 }
 
-// Función helper para convertir peticiones de IndexedDB a Promesas (más fácil de usar)
 function storeRequest(request) {
     return new Promise((resolve, reject) => {
         request.onsuccess = () => resolve(request.result);

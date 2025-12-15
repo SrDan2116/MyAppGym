@@ -24,6 +24,7 @@ body {
     color: var(--color-texto-principal);
     line-height: 1.6;
     padding: 15px;
+    padding-bottom: 50px; /* Espacio extra abajo */
 }
 
 h1, h2, h3, h4, strong {
@@ -86,6 +87,13 @@ nav button:hover {
     background-color: #3a3a3a;
 }
 
+/* Iconos de Navegación */
+nav button i {
+    margin-right: 8px;
+    font-size: 1.1em;
+    vertical-align: middle;
+}
+
 /* Botón Primario (Guardar, etc.) */
 button[id^="btn-guardar"] {
     background-color: var(--color-primario);
@@ -108,6 +116,8 @@ button[id^="btn-guardar"]:hover {
 /* --- Estilos de Formularios (Inputs, Select, etc.) --- */
 input[type="text"],
 input[type="number"],
+input[type="password"], /* Añadido para API Key */
+input[type="date"],     /* Añadido para fecha Dieta */
 select,
 textarea {
     width: 100%;
@@ -149,7 +159,7 @@ legend {
     border: 1px solid var(--color-superficie);
     border-radius: 8px;
     margin-bottom: 15px;
-    overflow: hidden; /* Para el borde redondeado */
+    overflow: hidden;
 }
 .rutina-header {
     padding: 15px;
@@ -182,7 +192,7 @@ legend {
     background-color: var(--color-bg-secundario);
 }
 .btn-editar-rutina, .btn-borrar-rutina {
-    flex-grow: 1; /* Ocupan el espacio */
+    flex-grow: 1;
     padding: 8px;
     font-size: 0.9em;
 }
@@ -210,14 +220,15 @@ legend {
     display: flex;
     gap: 10px;
     margin: 15px 0;
+    flex-wrap: wrap; /* Para que baje en pantallas pequeñas */
 }
-.form-agregar-ejercicio input[type="text"] { flex-grow: 2; }
+.form-agregar-ejercicio input[type="text"]:first-child { flex-grow: 2; }
 .form-agregar-ejercicio input[type="number"] { flex-grow: 1; }
 .form-agregar-ejercicio button {
     background-color: var(--color-secundario);
     color: black;
 }
-#btn-agregar-ejercicio-a-dia { width: auto; } /* Anula el width: 100% */
+#btn-agregar-ejercicio-a-dia { width: auto; }
 .ejercicio-temporal-item, .dia-temporal-item {
     background-color: var(--color-superficie);
     padding: 10px;
@@ -238,6 +249,32 @@ legend {
 }
 
 /* --- MÓDULO 2: CALENDARIO --- */
+.navegador-mes {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: var(--color-bg-secundario);
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+.navegador-mes h2 {
+    margin: 0;
+    font-size: 1.4em;
+    color: var(--color-secundario);
+}
+.navegador-mes button {
+    background-color: var(--color-superficie);
+    color: var(--color-texto-principal);
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    font-size: 1.5em;
+    line-height: 45px;
+}
+.navegador-mes button:hover {
+    background-color: #3a3a3a;
+}
 #calendario-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -256,9 +293,14 @@ legend {
     background-color: var(--color-superficie);
 }
 .dia-calendario.registrado {
-    background-color: #004D25; /* Verde oscuro */
-    color: #98FB98; /* Verde claro */
+    background-color: #004D25;
+    color: #98FB98;
     font-weight: bold;
+}
+.dia-vacio {
+    padding: 15px 0;
+    border: none;
+    background-color: transparent;
 }
 
 /* --- MÓDULO 3: REGISTRO DIARIO --- */
@@ -292,62 +334,24 @@ legend {
 }
 .ejercicio-para-registrar strong {
     font-size: 1.1em;
-    color: var(--color-secundario); /* Resaltar ejercicio */
+    color: var(--color-secundario);
 }
-.rep-input {
-    width: 65px;
-    margin-right: 10px;
-    text-align: center;
-    padding: 8px;
-    font-size: 0.9em;
-}
-
-/* --- Sección Home --- */
-#seccion-home {
-    text-align: center;
-    padding: 40px 20px;
-}
-#seccion-home p {
-    font-size: 1.1em;
-    color: var(--color-texto-secundario);
-}
-
-/* --- Sección Peso --- */
-#lista-medidas .registro-fecha {
-    background-color: var(--color-bg-secundario);
-    border: 1px solid var(--color-superficie);
-    padding: 15px;
+.serie-registro {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     margin-bottom: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
 }
-#lista-medidas .registro-fecha:hover {
-    background-color: var(--color-superficie);
-}
-
-#detalle-medida {
-    position: fixed; /* Modal */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 500px;
-    background: var(--color-bg-secundario);
-    border: 1px solid var(--color-primario);
-    border-radius: 8px;
-    padding: 20px;
-    z-index: 100;
-}
-#detalle-medida-contenido p {
-    font-size: 1.1em;
-    margin: 10px 0;
-}
-#btn-cerrar-detalle-medida {
-    background-color: var(--color-superficie);
+.serie-registro label {
+    flex-basis: 60px;
+    margin-bottom: 0;
     color: var(--color-texto-secundario);
-    width: 100%;
-    margin-top: 10px;
+}
+.rep-input, .peso-input {
+    width: 80px;
+    padding: 10px;
+    text-align: center;
+    font-size: 1em;
 }
 
 /* --- Vista Read-Only del Calendario --- */
@@ -374,34 +378,17 @@ legend {
     color: var(--color-texto-secundario);
 }
 
-/* --- Mejora #4: Iconos de Navegación --- */
-nav button i {
-    margin-right: 8px;
+/* --- Sección Home --- */
+#seccion-home {
+    text-align: center;
+    padding: 40px 20px;
+}
+#seccion-home p {
     font-size: 1.1em;
-    /* Para alinear el icono y el texto */
-    vertical-align: middle;
-}
-
-/* --- Mejora #2: Inputs de Peso/Reps --- */
-.serie-registro {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-.serie-registro label {
-    flex-basis: 60px; /* Ancho fijo para "Serie 1:" */
-    margin-bottom: 0;
     color: var(--color-texto-secundario);
 }
-.rep-input, .peso-input {
-    width: 80px; /* Ancho más pequeño */
-    padding: 10px;
-    text-align: center;
-    font-size: 1em;
-}
 
-/* --- Mejora #3: Contenedor del Gráfico --- */
+/* --- Sección Peso --- */
 .chart-container {
     width: 100%;
     max-width: 600px;
@@ -410,6 +397,42 @@ nav button i {
     background: var(--color-bg-secundario);
     border-radius: 8px;
 }
+#lista-medidas .registro-fecha {
+    background-color: var(--color-bg-secundario);
+    border: 1px solid var(--color-superficie);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+#lista-medidas .registro-fecha:hover {
+    background-color: var(--color-superficie);
+}
+#detalle-medida {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    background: var(--color-bg-secundario);
+    border: 1px solid var(--color-primario);
+    border-radius: 8px;
+    padding: 20px;
+    z-index: 100;
+}
+#detalle-medida-contenido p {
+    font-size: 1.1em;
+    margin: 10px 0;
+}
+#btn-cerrar-detalle-medida {
+    background-color: var(--color-superficie);
+    color: var(--color-texto-secundario);
+    width: 100%;
+    margin-top: 10px;
+}
+
 /* --- Módulo Configuración --- */
 #seccion-configuracion .config-opcion {
     background-color: var(--color-bg-secundario);
@@ -419,7 +442,7 @@ nav button i {
     border-radius: 8px;
 }
 #seccion-configuracion .config-opcion h4 {
-    color: var(--color-secundario); /* Color menta */
+    color: var(--color-secundario);
     font-size: 1.2em;
 }
 #seccion-configuracion .config-opcion p {
@@ -427,43 +450,151 @@ nav button i {
     margin-bottom: 15px;
 }
 .btn-config {
-    width: auto; /* No ocupa todo el ancho */
+    width: auto;
     padding: 10px 20px;
     background-color: var(--color-primario);
     color: white;
 }
 .btn-config.btn-importar {
-    background-color: var(--color-error); /* Rojo peligro */
+    background-color: var(--color-error);
 }
-/* --- Calendario: Navegador de Mes --- */
-.navegador-mes {
+
+/* =========================================
+   ESTILOS NUEVOS: MÓDULO DIETA Y MODAL
+   ========================================= */
+
+/* --- Tarjeta de Resumen del Día (Macros Totales) --- */
+.resumen-dia-card {
+    background-color: var(--color-bg-secundario);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid var(--color-primario);
+    text-align: center;
+}
+
+.resumen-dia-card h3 {
+    margin-top: 0;
+    color: var(--color-texto-principal);
+}
+
+/* Grilla para los macros (Calorías, Prot, Carb, Grasas) */
+.macros-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 columnas */
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.macro-card {
+    background-color: var(--color-superficie);
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1.1em;
+    color: var(--color-texto-principal);
+}
+
+/* --- Tarjetas de Comidas (Desayuno, Almuerzo...) --- */
+.comida-card {
+    background-color: var(--color-bg-secundario);
+    border: 1px solid var(--color-superficie);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.comida-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    background-color: var(--color-bg-secundario);
-    border-radius: 8px;
-    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
-.navegador-mes h2 {
-    margin: 0;
-    font-size: 1.4em;
+
+.comida-titulo {
+    font-weight: bold;
     color: var(--color-secundario); /* Color menta */
+    font-size: 1.1em;
 }
-.navegador-mes button {
+
+/* Botones pequeños dentro de la tarjeta de comida */
+.comida-controles button {
+    padding: 5px 8px;
+    margin-left: 4px;
+    font-size: 0.85em;
+    width: auto;
     background-color: var(--color-superficie);
-    color: var(--color-texto-principal);
-    width: 45px; /* Ancho fijo */
-    height: 45px; /* Alto fijo */
-    padding: 0;
-    font-size: 1.5em;
-    line-height: 45px; /* Centrar el texto verticalmente */
 }
-.navegador-mes button:hover {
-    background-color: #3a3a3a;
+
+.comida-detalles {
+    font-size: 0.9em;
+    color: var(--color-texto-secundario);
+    border-top: 1px solid var(--color-superficie);
+    padding-top: 8px;
+    line-height: 1.5;
 }
-.dia-vacio {
-    padding: 15px 0;
-    border: none;
-    background-color: transparent;
+
+/* --- Ventana Modal (Pop-up de Edición) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85); /* Fondo oscuro semitransparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: var(--color-bg);
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 450px;
+    border: 1px solid var(--color-primario);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.modal-content textarea {
+    min-height: 80px;
+    margin-bottom: 15px;
+}
+
+/* Grilla pequeña para los inputs manuales del modal */
+.macros-grid-mini {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr; /* 4 columnas */
+    gap: 5px;
+    margin: 15px 0;
+}
+
+.macros-grid-mini input {
+    padding: 8px 5px;
+    text-align: center;
+    font-size: 0.9em;
+}
+
+.modal-acciones {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-acciones button {
+    flex: 1; /* Que ambos botones ocupen el mismo ancho */
+}
+
+/* Texto de estado de la IA */
+#modal-estado-ia {
+    font-style: italic;
+    color: var(--color-texto-secundario);
+    margin-top: 5px;
+    font-size: 0.9em;
 }

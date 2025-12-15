@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi App de Gimnasio</title>
+    <title>Mi Control de Gimnasio</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
@@ -11,11 +11,13 @@
 <body>
     <header>
         <h1>Mi Control de Gimnasio</h1>
+        
         <nav>
             <button id="btn-nav-home"><i class="bi bi-house-door-fill"></i> Inicio</button>
             <button id="btn-nav-calendario"><i class="bi bi-calendar-event-fill"></i> Calendario</button>
             <button id="btn-nav-rutinas"><i class="bi bi-journal-text"></i> Rutinas</button>
             <button id="btn-nav-peso"><i class="bi bi-bar-chart-line-fill"></i> Peso</button>
+            <button id="btn-nav-dieta"><i class="bi bi-egg-fried"></i> Dieta</button>
             <button id="btn-nav-config"><i class="bi bi-gear-fill"></i> Config</button>
         </nav>
     </header>
@@ -26,13 +28,11 @@
         </section>
 
         <section id="seccion-calendario" class="oculto">
-            
             <div class="navegador-mes">
                 <button id="btn-mes-anterior">&lt;</button>
                 <h2 id="titulo-mes-ano">Cargando...</h2>
                 <button id="btn-mes-siguiente">&gt;</button>
             </div>
-            
             <div id="calendario-grid"></div>
         </section>
 
@@ -65,9 +65,28 @@
 
         <section id="seccion-gestor-rutinas" class="oculto">
             <h2>Mis Rutinas</h2>
-            <div id="lista-rutinas"></div><hr>
+            <div id="lista-rutinas"></div>
+            <hr>
             <h3>Crear/Modificar Nueva Rutina</h3>
-            <input type="text" id="txt-nombre-rutina" placeholder="Nombre (Ej: PPL 6 Días)"><div id="dias-en-creacion-container"><h4>Días de esta rutina:</h4><div id="dias-temporales-ui"></div></div><fieldset class="form-agregar-dia"><legend>Añadir Día a la Rutina</legend><input type="text" id="txt-nombre-dia" placeholder="Nombre del Día (Ej: Día 1 - Push)"><div id="ejercicios-temporales-para-dia-ui"></div><div class="form-agregar-ejercicio"><input type="text" id="txt-nombre-ejercicio" placeholder="Nombre del ejercicio"><input type="number" id="num-series" placeholder="# Series"><button type="button" id="btn-agregar-ejercicio-a-dia">Añadir Ejercicio</button></div><button type="button" id="btn-guardar-dia-en-rutina">Guardar este Día</button></fieldset><button id="btn-guardar-rutina-completa">Guardar Rutina Completa</button><button type="button" id="btn-cancelar-rutina">Cancelar/Limpiar</button>
+            <input type="text" id="txt-nombre-rutina" placeholder="Nombre (Ej: PPL 6 Días)">
+            <div id="dias-en-creacion-container">
+                <h4>Días de esta rutina:</h4>
+                <div id="dias-temporales-ui"></div>
+            </div>
+            <fieldset class="form-agregar-dia">
+                <legend>Añadir Día a la Rutina</legend>
+                <input type="text" id="txt-nombre-dia" placeholder="Nombre del Día (Ej: Día 1 - Push)">
+                <div id="ejercicios-temporales-para-dia-ui"></div>
+                <div class="form-agregar-ejercicio">
+                    <input type="text" id="txt-nombre-ejercicio" placeholder="Nombre del ejercicio">
+                    <input type="text" id="txt-rango-reps" placeholder="Meta (Ej: 8-12)" style="width: 120px;"> 
+                    <input type="number" id="num-series" placeholder="# Series">
+                    <button type="button" id="btn-agregar-ejercicio-a-dia">Añadir</button>
+                </div>
+                <button type="button" id="btn-guardar-dia-en-rutina">Guardar este Día</button>
+            </fieldset>
+            <button id="btn-guardar-rutina-completa">Guardar Rutina Completa</button>
+            <button type="button" id="btn-cancelar-rutina">Cancelar/Limpiar</button>
         </section>
         
         <section id="seccion-peso" class="oculto">
@@ -92,11 +111,59 @@
                 <button id="btn-cerrar-detalle-medida">Cerrar</button>
             </div>
         </section>
+
+        <section id="seccion-dieta" class="oculto">
+            <h2>Diario de Comidas</h2>
+            <div style="margin-bottom: 20px; text-align: center;">
+                <label for="fecha-dieta">Viendo registro del:</label>
+                <input type="date" id="fecha-dieta" style="padding: 10px; border-radius: 5px; border: 1px solid #ccc;">
+            </div>
+            <div class="resumen-dia-card">
+                <h3>Totales del Día</h3>
+                <div class="macros-grid">
+                    <div class="macro-card">🔥 <span id="total-calorias">0</span></div>
+                    <div class="macro-card">🥩 <span id="total-proteinas">0</span>g</div>
+                    <div class="macro-card">🍞 <span id="total-carbs">0</span>g</div>
+                    <div class="macro-card">🥑 <span id="total-grasas">0</span>g</div>
+                </div>
+            </div>
+            <div id="contenedor-comidas"></div>
+            <button id="btn-agregar-snack" style="background-color: var(--color-secundario); color: black; margin-top: 10px;">+ Agregar Snack</button>
+            <button id="btn-guardar-dia-dieta" style="margin-top: 20px;">Guardar Día Completo</button>
+
+            <div id="modal-editar-comida" class="modal-overlay oculto">
+                <div class="modal-content">
+                    <h3 id="modal-titulo-comida">Editar Comida</h3>
+                    <textarea id="modal-txt-descripcion" placeholder="Ej: 2 huevos y pan integral..."></textarea>
+                    <button id="modal-btn-calcular" style="background-color: #6f42c1; color: white;">✨ Calcular Macros (IA)</button>
+                    <p id="modal-estado-ia" style="font-size: 0.8em; color: gray;"></p>
+                    <div id="modal-resultado-macros" class="oculto">
+                        <div class="macros-grid-mini">
+                            <input type="number" id="modal-cal" placeholder="Kcal">
+                            <input type="number" id="modal-prot" placeholder="Prot">
+                            <input type="number" id="modal-carb" placeholder="Carb">
+                            <input type="number" id="modal-gras" placeholder="Gras">
+                        </div>
+                    </div>
+                    <div class="modal-acciones">
+                        <button id="modal-btn-confirmar">Confirmar</button>
+                        <button id="modal-btn-cancelar" style="background-color: var(--color-error);">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        </section>
         
         <section id="seccion-configuracion" class="oculto">
             <h2>Configuración y Respaldo</h2>
             <p>Guarda tus datos antes de limpiar el caché o cambiar de dispositivo.</p>
             
+            <div class="config-opcion">
+                <h4>Gemini AI Key</h4>
+                <p>Pega aquí tu clave de Google AI Studio para que funcione la calculadora de dieta.</p>
+                <input type="password" id="input-api-key" placeholder="Pega tu API Key aquí" style="margin-bottom: 10px;">
+                <button id="btn-guardar-api-key" class="btn-config">Guardar Key</button>
+            </div>
+
             <div class="config-opcion">
                 <h4>Exportar Datos</h4>
                 <p>Guarda todas tus rutinas, registros y medidas en un archivo `.json`.</p>
