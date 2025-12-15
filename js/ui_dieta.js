@@ -236,75 +236,68 @@ function confirmarEdicionComida() {
 }
 
 async function calcularConIA() {
-  const texto = modalDesc.value.trim();
-  if (!texto) {
-    alert("Describe la comida primero.");
-    return;
-  }
+    const texto = modalDesc.value.trim();
+    if (!texto) { alert("Describe la comida primero."); return; }
 
-  const apiKey = localStorage.getItem("gym_gemini_api_key");
-  if (!apiKey) {
-    alert("Falta API Key en Configuración.");
-    return;
-  }
+    const apiKey = localStorage.getItem('gym_gemini_api_key');
+    if (!apiKey) { alert("Falta API Key en Configuración."); return; }
 
-  modalEstadoIA.textContent = "Calculando...";
-  modalBtnCalcular.disabled = true;
+    modalEstadoIA.textContent = "Calculando...";
+    modalBtnCalcular.disabled = true;
 
-  const prompt = `
+    const prompt = `
         Analiza nutricionalmente: "${texto}".
         Calcula calorias, proteinas, carbohidratos, grasas.
         Responde SOLO JSON válido:
         { "calorias": 0, "proteinas": 0, "carbohidratos": 0, "grasas": 0 }
     `;
 
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${apiKey}`;
+    try {
+        // VOLVEMOS A LA 2.0-FLASH QUE SÍ RECONOCIÓ (pero ahora con tu key nueva)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
-          },
-        ],
-      }),
-    });
+        if (!response.ok) {
+            // Manejo de errores detallado
+            if (response.status === 404) throw new Error("Modelo no encontrado (404).");
+            if (response.status === 429) throw new Error("Cuota excedida (429). Crea otra Key.");
+            if (response.status === 400) throw new Error("Petición inválida (400).");
+            throw new Error(`Error API: ${response.status}`);
+        }
 
-    // Manejo específico del error 429
-    if (response.status === 429) {
-      throw new Error("Límite de cuota excedido. Crea una nueva API Key.");
+        const data = await response.json();
+        
+        // Verificación extra de seguridad
+        if (!data.candidates || data.candidates.length === 0) {
+            throw new Error("La IA no devolvió resultados.");
+        }
+
+        let textoRespuesta = data.candidates[0].content.parts[0].text;
+        textoRespuesta = textoRespuesta.replace(/```json/g, '').replace(/```/g, '').trim();
+
+        const macros = JSON.parse(textoRespuesta);
+
+        modalInpCal.value = macros.calorias;
+        modalInpProt.value = macros.proteinas;
+        modalInpCarb.value = macros.carbohidratos;
+        modalInpGras.value = macros.grasas;
+        modalEstadoIA.textContent = "¡Cálculo listo!";
+
+    } catch (error) {
+        console.error(error);
+        modalEstadoIA.textContent = "Error: " + error.message;
+        alert("Hubo un problema: " + error.message);
+    } finally {
+        modalBtnCalcular.disabled = false;
     }
-
-    if (!response.ok) throw new Error(`Error API: ${response.status}`);
-
-    const data = await response.json();
-    let textoRespuesta = data.candidates[0].content.parts[0].text;
-
-    textoRespuesta = textoRespuesta
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-
-    const macros = JSON.parse(textoRespuesta);
-
-    modalInpCal.value = macros.calorias;
-    modalInpProt.value = macros.proteinas;
-    modalInpCarb.value = macros.carbohidratos;
-    modalInpGras.value = macros.grasas;
-    modalEstadoIA.textContent = "¡Cálculo listo!";
-  } catch (error) {
-    console.error(error);
-    modalEstadoIA.textContent = "Error: " + error.message;
-    alert("Hubo un problema: " + error.message);
-  } finally {
-    modalBtnCalcular.disabled = false;
-  }
 }
-
 // --- Guardado Final ---
 
 function guardarDiaCompleto() {
