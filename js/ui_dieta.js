@@ -202,8 +202,9 @@ async function calcularConIA() {
     `;
 
     try {
-        // --- AQUÍ ESTÁ EL CAMBIO CLAVE: gemini-1.5-flash ---
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // --- CAMBIO A MODELO 2.0-FLASH ---
+        // Usamos gemini-2.0-flash como indicaba tu guía.
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -218,7 +219,6 @@ async function calcularConIA() {
         const data = await response.json();
         let textoRespuesta = data.candidates[0].content.parts[0].text;
         
-        // Limpiamos el JSON por si acaso
         textoRespuesta = textoRespuesta.replace(/```json/g, '').replace(/```/g, '').trim();
 
         const macros = JSON.parse(textoRespuesta);
@@ -231,7 +231,7 @@ async function calcularConIA() {
 
     } catch (error) {
         console.error(error);
-        modalEstadoIA.textContent = "Error. Revisa tu Key o Internet.";
+        modalEstadoIA.textContent = "Error: Verifica tu API Key.";
         alert("Error: " + error.message);
     } finally {
         modalBtnCalcular.disabled = false;
