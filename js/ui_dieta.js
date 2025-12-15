@@ -193,7 +193,6 @@ async function calcularConIA() {
     modalEstadoIA.textContent = "Calculando...";
     modalBtnCalcular.disabled = true;
 
-    // Prompt estricto para JSON
     const prompt = `
         Analiza nutricionalmente: "${texto}".
         Calcula calorias, proteinas, carbohidratos, grasas.
@@ -202,9 +201,8 @@ async function calcularConIA() {
     `;
 
     try {
-        // --- CAMBIO A MODELO 2.0-FLASH ---
-        // Usamos gemini-2.0-flash como indicaba tu guía.
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        // --- VOLVEMOS AL MODELO ESTÁNDAR Y ESTABLE: gemini-1.5-flash ---
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -213,6 +211,11 @@ async function calcularConIA() {
                 contents: [{ parts: [{ text: prompt }] }]
             })
         });
+
+        // Manejo específico del error 429
+        if (response.status === 429) {
+            throw new Error("Límite de cuota excedido. Crea una nueva API Key.");
+        }
 
         if (!response.ok) throw new Error(`Error API: ${response.status}`);
 
@@ -231,8 +234,8 @@ async function calcularConIA() {
 
     } catch (error) {
         console.error(error);
-        modalEstadoIA.textContent = "Error: Verifica tu API Key.";
-        alert("Error: " + error.message);
+        modalEstadoIA.textContent = "Error: " + error.message;
+        alert("Hubo un problema: " + error.message);
     } finally {
         modalBtnCalcular.disabled = false;
     }

@@ -1,5 +1,5 @@
 // CAMBIA v27 por v28
-const CACHE_NAME = 'notas-cache-v28'; 
+const CACHE_NAME = 'notas-cache-v29'; 
 
 const urlsToCache = [
     './',
@@ -13,7 +13,7 @@ const urlsToCache = [
     'js/ui_calendario.js',
     'js/ui_peso.js',
     'js/ui_configuracion.js',
-    'js/ui_dieta.js', // ¡Este es el importante!
+    'js/ui_dieta.js', 
     'https://cdn.jsdelivr.net/npm/chart.js',
     'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css',
     'images/icon-192.png',
