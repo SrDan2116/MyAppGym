@@ -201,9 +201,8 @@ async function calcularConIA() {
     `;
 
     try {
-        // --- USAMOS EL MODELO ESTABLE: gemini-1.5-flash ---
-        // Con un proyecto NUEVO, este modelo NO dará 404 ni 429
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        // --- USAMOS EL MODELO 2.0-FLASH QUE TU CUENTA SÍ RECONOCE ---
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         
         const response = await fetch(url, {
             method: 'POST',
@@ -214,14 +213,18 @@ async function calcularConIA() {
         });
 
         if (!response.ok) {
-            if (response.status === 404) throw new Error("Modelo no encontrado (Posible error de proyecto).");
-            if (response.status === 429) throw new Error("Cuota excedida. ¿Creaste un Proyecto Nuevo?");
+            if (response.status === 404) throw new Error("Modelo no encontrado (Intenta con gemini-2.0-flash-exp).");
+            if (response.status === 429) throw new Error("Cuota excedida. ¡NECESITAS UN PROYECTO NUEVO EN GOOGLE!");
             throw new Error(`Error API: ${response.status}`);
         }
 
         const data = await response.json();
-        let textoRespuesta = data.candidates[0].content.parts[0].text;
         
+        if (!data.candidates || data.candidates.length === 0) {
+             throw new Error("La IA no devolvió respuesta.");
+        }
+
+        let textoRespuesta = data.candidates[0].content.parts[0].text;
         textoRespuesta = textoRespuesta.replace(/```json/g, '').replace(/```/g, '').trim();
 
         const macros = JSON.parse(textoRespuesta);
