@@ -197,18 +197,48 @@ async function calcularConIA() {
     modalEstadoIA.textContent = "Calculando...";
     modalBtnCalcular.disabled = true;
 
-    const prompt = `Calcula macros aproximados. Solo JSON. Formato: {"calorias": int, "proteinas": int, "carbohidratos": int, "grasas": int}. Comida: "${texto}"`;
+    // EL PROMPT: Le pedimos estrictamente JSON
+    const prompt = `
+        Actúa como un nutricionista. Analiza la siguiente comida: "${texto}".
+        Calcula los macronutrientes aproximados.
+        IMPORTANTE: Responde ÚNICAMENTE con este formato JSON (sin texto extra, ni markdown):
+        {
+            "calorias": 0,
+            "proteinas": 0,
+            "carbohidratos": 0,
+            "grasas": 0
+        }
+        Reemplaza los 0 con los números enteros estimados.
+    `;
 
     try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
+        // CAMBIO IMPORTANTE: Usamos el modelo 'gemini-1.5-flash'
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        
+        const response = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
         });
 
+        if (!response.ok) {
+            throw new Error(`Error API: ${response.status}`);
+        }
+
         const data = await response.json();
+        
+        // Verificamos que la estructura sea correcta antes de leer
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+            throw new Error("La IA no devolvió una respuesta válida.");
+        }
+
         let textoRespuesta = data.candidates[0].content.parts[0].text;
-        textoRespuesta = textoRespuesta.replace(/```json/g, '').replace(/```/g, '');
+        
+        // Limpieza: A veces la IA responde con ```json ... ```, hay que quitarlo
+        textoRespuesta = textoRespuesta.replace(/```json/g, '').replace(/```/g, '').trim();
+
         const macros = JSON.parse(textoRespuesta);
 
         modalInpCal.value = macros.calorias;
@@ -219,7 +249,8 @@ async function calcularConIA() {
 
     } catch (error) {
         console.error(error);
-        modalEstadoIA.textContent = "Error al conectar con IA.";
+        modalEstadoIA.textContent = "Error: Verifica tu API Key o conexión.";
+        alert("Hubo un problema: " + error.message);
     } finally {
         modalBtnCalcular.disabled = false;
     }
